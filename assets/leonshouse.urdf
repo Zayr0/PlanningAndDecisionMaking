@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="leonshouse">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.0523621017064783 0.0355078616585194 0.0338870328693588"
+        rpy="0 0 0" />
+      <mass
+        value="193.5" />
+      <inertia
+        ixx="43.053597383721"
+        ixy="2.78964647463096E-15"
+        ixz="-9.38962449459349E-17"
+        iyy="47.7525"
+        iyz="2.4044434448581E-15"
+        izz="87.903597383721" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://leonshouse/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://leonshouse/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>
