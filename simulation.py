@@ -1,23 +1,37 @@
 import pybullet as p
 from environment.world import build_world
+from modelling.drone_dynamics import Quadrotor
+from modelling.trajectory_generation import test_traj
 import time
 import numpy as np
 
 # connect
 p.connect(p.GUI)
 p.setGravity(0, 0, 0)
+N = 1000  # number of simulation steps
 
 # build the environment by loading obstacle .urdfs and obtaining their IDs
 obstacles = build_world()
 
-# load the drone
-drone = p.loadURDF("aliengo/aliengo.urdf", [1, 1, 1], p.getQuaternionFromEuler([0, 0, 0]))
+# load the drone and specify its dynamics
+droneID = p.loadURDF("aliengo/aliengo.urdf", [1, 1, 1], p.getQuaternionFromEuler([0, 0, 0]))
+drone = Quadrotor()
+x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
+x_ref = test_traj(N)
 
+x0 = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+u0 = np.array([0, 0, 0, 0])
+x_bag[:, 0] = x0
+u_bag[:, 0] = u0
 
-for i in range(1000):
-    new_location = [2*np.cos(i/10), 2*np.sin(i/10), 3*np.cos(i/100)**2] # this would be calculated with our state dynamics
-    p.resetBasePositionAndOrientation(drone, new_location, p.getQuaternionFromEuler([0, 0, 0]))
+for k in range(N - 1):
+    drone_pos = x_bag[:3, k]
+    drone_att = x_bag[3:6, k]
+
+    p.resetBasePositionAndOrientation(droneID, drone_pos, p.getQuaternionFromEuler([0, 0, 0]))
     p.stepSimulation()
+
+    x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k])
     time.sleep(0.02)
 
 # disconnect

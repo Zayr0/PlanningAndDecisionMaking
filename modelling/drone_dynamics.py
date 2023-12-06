@@ -1,5 +1,6 @@
 import casadi as ca
 import numpy as np
+import control as ctrl
 
 
 class Quadrotor:
@@ -17,6 +18,16 @@ class Quadrotor:
         self.B = np.zeros((12, 4))
         self.C = np.eye(12) # assume full information feedback
         self.D = np.zeros((12, 4))
+
+        #
+        self.dsys = 0
+        self.csys = 0
+
+        # build dynamics etc
+        x_operating = np.zeros((12, 1))
+        u_operating = np.array([10, 0, 0, 0]).reshape((-1, 1))
+        self.A, self.B, self.C, self.D = self.linearize(x_operating, u_operating)
+        self.K = self.make_dlqr_controller()
 
     def build_x_dot(self):
         self.x_dot = ca.vertcat(self.x[1], -self.x[0] + self.u)
@@ -74,4 +85,28 @@ class Quadrotor:
     def compute_next_state(self, x, u):
         # x_next = x + self.dt * self.dyn_fun(x, u)
         x_next = self.dynamics(x, u)
+        return x_next
+
+    def make_dlqr_controller(self):
+        x_operating = np.zeros((12, 1))
+        u_operating = np.array([10, 0, 0, 0]).reshape((-1, 1))
+        A, B, C, D = self.linearize(x_operating, u_operating)
+        Q = np.eye(12)
+        R = np.eye(4)
+        sys_continuous = ctrl.ss(A, B, C, D)
+        self.csys = sys_continuous
+        sys_discrete = ctrl.c2d(sys_continuous, self.dt, method='zoh')
+        self.dsys = sys_discrete
+        K, _, _ = ctrl.dlqr(self.dsys.A, self.dsys.B, Q, R)
+        return K
+
+    def get_ss_bag_vectors(self, N):
+        """N is the number of simulation steps, thus number of concatinated x vectors"""
+        x_bag = np.zeros((self.n_states, N))
+        u_bag = np.zeros((self.n_inputs, N))
+        return x_bag, u_bag
+
+    def step(self, x, x_ref):
+        # discrete step
+        x_next = self.dsys.A @ x + self.dsys.B @ self.K @ (x_ref - x)
         return x_next
