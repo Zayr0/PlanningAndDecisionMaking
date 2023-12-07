@@ -1,22 +1,30 @@
 import pybullet as p
 import pybullet_data
 import time
+import cvxpy as cp
 import numpy as np
 from stl import mesh
+import os
 
 
 class Environment:
     def __init__(self):
         self.width = 10
         self.height = 10
-        self.world_size = np.array([[-5, 5], [-5, 5]])
+        self.world_size = np.array([[-2, 2], [-2, 2]])
         self.obstacles = []
         self.build_world()
-        self.generate_random_obstacles(10, np.array([1, 1]))
+        self.generate_random_obstacles(1, np.array([1, 1]))
 
     def build_world(self):
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         planeId = p.loadURDF("plane.urdf")
+
+        #p.setAdditionalSearchPath(os.path.join(os.getcwd(), "environment", "assets"))
+        #leonshouse = p.loadURDF("leonshouse.urdf", [0, 0, 0], p.getQuaternionFromEuler([0, 0, 0]))
+        #p.changeDynamics(leonshouse, -1, collisionFilterGroup=8, collisionFilterMask=9)
+        #p.changeVisualShape(leonshouse, -1, rgbaColor=[0, 1, 0, 0.1])
+        #p.setAdditionalSearchPath(pybullet_data.getDataPath())
         return
 
     def generate_random_obstacles(self, n_obstacles, bb_size):
@@ -65,7 +73,29 @@ class Environment:
             # You can set additional properties for the obstacle if needed, such as color, friction, etc.
             p.changeVisualShape(obstacle_body_id, -1, rgbaColor=[1, 0, 0, 1])  # red color
             self.obstacles.append(obstacle_body_id)
+        # randomized polygon approach
+        # n_gon = 3  # np.random.choice([3,4,5], 1)  # n of vertices of prism base
+        # height = 3
+        # radius = 0.3
+        # vertices_bottom = [[radius, 0, 0]]
+        # vertices_top = [[radius, 0, height]]
+        # d_angle = (n_gon - 2) * np.pi / n_gon
+        # for i in range(n_gon - 1):
+        #     rot_mat = np.array([[np.cos(d_angle * (i + 1)), - np.sin(d_angle * (i + 1)), 0],
+        #                         [np.sin(d_angle * (i + 1)), np.cos(d_angle * (i + 1)), 0],
+        #                         [0, 0, 1]])
+        #     vertices_bottom.append(list(rot_mat @ np.array(vertices_bottom[0])))
+        # for i in range(n_gon):
+        #     vertices_top.append(list(vertices_bottom[i] + np.array([0, 0, height])))
+        #
+        # data = np.zeros(n_gon + 2, dtype=mesh.Mesh.dtype)
+        #
+        # for i in range(n_gon - 1):
+        #     data['vectors'][i] = np.vstack([vertices_bottom[i], vertices_bottom[i + 1], vertices_top[i]])
+        # data['vectors'][n_gon] = np.vstack(vertices_top[:3])
+        # data['vectors'][n_gon + 1] = np.vstack(vertices_bottom[:3])
         return
+
 
     def get_closest_point(self):
         # Load or create your collision object (e.g., a mesh)
@@ -92,3 +122,45 @@ class Environment:
 
         # Remove temporary objects
         p.removeBody(temp_body_id)
+
+
+class Obstacle:
+    def __init__(self, A, b):
+        self.center = 0
+        self.id = 0
+        self.vertices = []
+        self.constr_mat_A = A
+        self.constr_mat_b = b
+
+    def _min_dist(self, constr_j_A, constr_j_b):
+        """this formulates the QP optimization to obtain the shortest distance between
+        the polytope i of this obstacle and another polytope j"""
+        zi = cp.Variable(2)
+        zj = cp.Variable(2)
+
+        cost = cp.quad_form(zi - zj, np.eye(2)) #cp.quad_form(zi, np.eye(2)) - cp.quad_form(zj, np.eye(2))
+        constraints = []
+        constraints += [constr_j_A @ zj <= constr_j_b]
+        constraints += [self.constr_mat_A @ zi <= self.constr_mat_b]
+
+        problem = cp.Problem(cp.Minimize(cost), constraints)
+        problem.solve(solver=cp.OSQP)
+
+        dist = abs(zi.value - zj.value)
+        return np.linalg.norm(dist, 2)
+
+# testing:
+Ai = np.array([[1, 0],
+               [-1, 0],
+               [0, 1],
+               [0, -1]])
+bi = np.array([1, 0, 1, 0])
+
+Aj = np.array([[1, 0],
+               [-1, 0],
+               [0, 1],
+               [0, -1]])
+bj = np.array([3, -2, 1, 0])
+
+obs1 = Obstacle(Ai, bi)
+print(obs1._min_dist(Aj, bj))
