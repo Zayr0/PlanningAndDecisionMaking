@@ -25,7 +25,8 @@ p.setRealTimeSimulation(1)
 p.setGravity(0, 0, -10)
 
 
+
 while (p.isConnected()):
   time.sleep(1. / 240.)
-  points = p.getContactPoints(groundId, droneId, -1, -1)
-  print(points)
+  contactPoints = p.getContactPoints(groundId, droneId, -1, -1)
+  print(contactPoints)
