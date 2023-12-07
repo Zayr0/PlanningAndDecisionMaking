@@ -52,11 +52,11 @@ class Quadrotor:
         dx_phi = x_dphi
         dx_theta = x_dtheta
         dx_psi = x_dpsi
-        dx_dx = 1/m * (ca.cos(x_phi)*ca.sin(x_theta)*ca.cos(x_psi) + ca.sin(x_phi)*ca.sin(x_psi))
+        dx_dx = u_F/m * (ca.cos(x_phi)*ca.sin(x_theta)*ca.cos(x_psi) + ca.sin(x_phi)*ca.sin(x_psi))
         dx_dy = u_F/m * (ca.cos(x_phi)*ca.sin(x_theta)*ca.sin(x_psi)+ca.sin(x_phi)*ca.cos(x_psi))
-        dx_dz = u_F/m * ca.cos(x_phi) * ca.cos(x_theta) - m * g
-        dx_dphi = 1/Ix * (u_Tx + x_dtheta * x_dpsi*(Iy- Iz))
-        dx_dtheta = 1/Iy * (u_Ty + x_dpsi*x_dphi*(Iz-Ix))
+        dx_dz = u_F/m * ca.cos(x_phi) * ca.cos(x_theta) - g
+        dx_dphi = 1/Ix * (u_Tx + x_dtheta * x_dpsi*(Iy - Iz))
+        dx_dtheta = 1/Iy * (u_Ty + x_dpsi*x_dphi*(Iz - Ix))
         dx_dpsi = 1/Iz * (u_Tz + x_dphi*x_dtheta*(Ix-Iy))
 
         x_dot = ca.vertcat(dx_x, dx_y, dx_z, dx_phi, dx_theta, dx_psi,
