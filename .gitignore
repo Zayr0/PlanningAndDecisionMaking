@@ -1,3 +1,4 @@
-# Default ignored files
+modelling/testing.py
+__pycache__
 /assets/
 /bullet3-master/
