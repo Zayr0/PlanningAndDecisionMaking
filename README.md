@@ -1,4 +1,6 @@
 # PlanningAndDecisionMaking
+## installation instructions
+
 
 ## to do (write or figure out how to use existing functions)
 * finish drone dynamics python code - Leon
@@ -9,4 +11,4 @@
 * steering function for quadrotor (paper about snap control https://ieeexplore.ieee.org/document/5980409) - Maria
 * dynamic obstacles representation - Maria
 * collision avoidance
-* controller
+* controller - Leon
