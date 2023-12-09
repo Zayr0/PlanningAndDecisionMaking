@@ -18,9 +18,9 @@ env = Environment()
 droneID = p.loadURDF("sphere2.urdf", [1, 1, 1], p.getQuaternionFromEuler([0, 0, 0]))
 drone = Quadrotor()
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
-x_ref = test_traj_wp(N)
+x_ref = test_traj_square(N)
 
-x0 = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+x0 = np.array([1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 u0 = np.array([0, 0, 0, 0])
 x_bag[:, 0] = x0
 u_bag[:, 0] = u0
