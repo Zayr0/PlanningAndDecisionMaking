@@ -52,9 +52,15 @@ class Environment:
         for i, vertex in enumerate(hull_vertices):
             stl_mesh.vectors[i] = vertex
 
+<<<<<<< Updated upstream
         # Save the STL file
         temp_stl_filename = "temp/temp_mesh_convex_hulll_" + str(hash) + ".stl"
         stl_mesh.save(temp_stl_filename)
+=======
+        # Save the STL mesh to a temporary file
+        temp_stl_filename = "temp_mesh.stl"
+        mesh_data.save(temp_stl_filename)
+>>>>>>> Stashed changes
 
         # Load the mesh using PyBullet
         mesh_collision = p.createCollisionShape(p.GEOM_MESH, fileName=temp_stl_filename)

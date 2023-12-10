@@ -64,6 +64,7 @@ class Quadrotor:
         self.f = x_dot
         self.dynamics = ca.Function("quadrotor_dyn", [self.x, self.u], [self.x + self.dt * x_dot])
 
+        # this is continuous or discrete time?
         jac_dyn_x = ca.jacobian(self.x + self.dt * x_dot, self.x)
         jac_dyn_u = ca.jacobian(self.x + self.dt * x_dot, self.u)
         self.jac_dyn_x = ca.Function("jac_dyn_x", [self.x, self.u], [jac_dyn_x])
