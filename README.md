@@ -10,5 +10,5 @@
 * graph generation e.g. RRT* - Long
 * steering function for quadrotor (paper about snap control https://ieeexplore.ieee.org/document/5980409) - Maria
 * dynamic obstacles representation - Maria
-* collision avoidance
+* collision avoidance - Long
 * controller - Leon
