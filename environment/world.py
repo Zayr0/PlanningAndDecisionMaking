@@ -23,13 +23,12 @@ class Environment:
         # build some obstacles
         for x in np.arange(- int(self.width/2), int(self.width/2), 2):
             for y in np.arange(- int(self.depth/2), int(self.depth/2), 2):
-                if np.random.choice([0, 1], 1) >= 0.5:
-                    initial_pose = [x, y, 0]
-                    self.generate_obstacle(initial_pose, hash=(x*y)**2)
-        self.generate_obstacle([0, 0, 0])
+                initial_pose = [x, y, 0]
+                self.generate_obstacle(initial_pose)
         return
 
     def generate_obstacle(self, initial_pose, hash=0):
+        print(initial_pose)
         x_off, y_off, z_off = initial_pose
         # Define the intervals for random points
         xmin, xmax = -1.0, 1.0
@@ -53,7 +52,7 @@ class Environment:
             stl_mesh.vectors[i] = vertex
 
         # Save the STL file
-        temp_stl_filename = "temp/temp_mesh_convex_hulll_" + str(hash) + ".stl"
+        temp_stl_filename = "temp/temp_mesh_convex_hull" + str(time.time()) + ".stl"
         stl_mesh.save(temp_stl_filename)
 
         # Load the mesh using PyBullet
