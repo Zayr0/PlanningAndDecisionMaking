@@ -5,7 +5,6 @@ from modelling.drone_dynamics import Quadrotor
 from modelling.trajectory_generation import *
 import time
 import numpy as np
-from modelling.path_planning import RRT
 
 # connect
 p.connect(p.GUI)
