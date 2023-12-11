@@ -5,6 +5,7 @@ from modelling.drone_dynamics import Quadrotor
 from modelling.trajectory_generation import *
 import time
 import numpy as np
+from modelling.path_planning import RRT
 
 # connect
 p.connect(p.GUI)
@@ -13,6 +14,10 @@ N = 1000  # number of simulation steps
 
 # build the environment by loading obstacle .urdfs and obtaining their IDs
 env = Environment()
+start = np.array([0, -3, 1])
+goal = np.array([0, 3, 1])
+# plan_alg = RRT(env, start, goal)
+# plan_alg.run()
 
 # load the drone and specify its dynamics
 droneID = p.loadURDF("sphere2.urdf", [1, 1, 1], p.getQuaternionFromEuler([0, 0, 0]))

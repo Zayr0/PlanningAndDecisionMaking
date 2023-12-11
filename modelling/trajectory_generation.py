@@ -17,8 +17,8 @@ def test_traj_square(N):
     return x_ref
 
 
-def test_traj_wps(N):
-    wps = np.array([[1, 0, 1], [1, 3, 1], [3, 3, 1]])
+def test_traj_wps(N, wps):
+    #wps = np.array([[1, 0, 1], [1, 3, 1], [3, 3, 1]])
     n_pwc = wps.shape[0]  # number of piece wise constant elements
     n_points_per_link = int((N / n_pwc))
     n_recip = N % n_pwc

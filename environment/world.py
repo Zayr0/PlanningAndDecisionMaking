@@ -11,8 +11,8 @@ import os
 class Environment:
     def __init__(self):
         self.width = 10
-        self.height = 10
-        self.world_size = np.array([[-2, 2], [-2, 2]])
+        self.depth = 10
+        self.height = 3
         self.obstacles = []
         self.build_world()
 
@@ -22,7 +22,7 @@ class Environment:
 
         # build some obstacles
         for x in np.arange(- int(self.width/2), int(self.width/2), 2):
-            for y in np.arange(- int(self.height/2), int(self.height/2), 2):
+            for y in np.arange(- int(self.depth/2), int(self.depth/2), 2):
                 if np.random.choice([0, 1], 1) >= 0.5:
                     initial_pose = [x, y, 0]
                     self.generate_obstacle(initial_pose, hash=(x*y)**2)
@@ -34,7 +34,7 @@ class Environment:
         # Define the intervals for random points
         xmin, xmax = -1.0, 1.0
         ymin, ymax = -1.0, 1.0
-        zmin, zmax = 0.0, 5.0
+        zmin, zmax = 0.0, self.height
 
         # Generate random 3D points within specified intervals
         #np.random.seed(42)
@@ -77,7 +77,7 @@ class Environment:
     def distance_nearest_obstacle(self, current_pos):
         dist_min = np.inf
         for obs in self.obstacles:
-            dist_new = obs._min_dist(current_pos)
+            dist_new = obs.min_dist(current_pos)
             dist_min = np.min([dist_min, dist_new])
         return dist_min
 
@@ -90,7 +90,7 @@ class Obstacle:
         self.constr_mat_A = 0
         self.constr_mat_b = 0
 
-    def _min_dist(self, zj_val):
+    def min_dist(self, zj_val):
         """this formulates the QP optimization to obtain the shortest distance between
         the polytope i of this obstacle and a point j"""
         zi = cp.Variable(3)
