@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from modelling.drone_dynamics import Quadrotor
-from modelling.trajectory_generation import test_traj
+from Modelling.drone_dynamics import Quadrotor
+from Modelling.trajectory_generation import test_traj
 
 
 drone = Quadrotor()
