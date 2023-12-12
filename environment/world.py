@@ -12,7 +12,7 @@ class Environment:
     def __init__(self):
         self.width = 10
         self.depth = 10
-        self.height = 3
+        self.height = 10
         self.obstacles = []
         self.build_world()
 
@@ -23,23 +23,24 @@ class Environment:
         # build some obstacles
         for x in np.arange(- int(self.width/2), int(self.width/2), 2):
             for y in np.arange(- int(self.depth/2), int(self.depth/2), 2):
-                initial_pose = [x, y, 0]
-                self.generate_obstacle(initial_pose)
+                for z in np.arange(0, int(self.height), 2):
+                    initial_pose = [x, y, z]
+                    self.generate_obstacle(initial_pose)
         return
 
     def generate_obstacle(self, initial_pose, hash=0):
-        print(initial_pose)
         x_off, y_off, z_off = initial_pose
         # Define the intervals for random points
         xmin, xmax = -1.0, 1.0
         ymin, ymax = -1.0, 1.0
-        zmin, zmax = 0.0, self.height
+        zmin, zmax = -1.0, 2
 
         # Generate random 3D points within specified intervals
         #np.random.seed(42)
-        points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
-        points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(3, 3))
-        points = np.vstack([points_base, points_random])
+        #points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
+        points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(7, 3))
+        #points = np.vstack([points_base, points_random])
+        points = points_random
         points = points + np.tile(np.array([x_off, y_off, z_off]), (points.shape[0], 1))
         # Compute the convex hull
         hull = ConvexHull(points)
