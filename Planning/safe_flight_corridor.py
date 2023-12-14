@@ -28,3 +28,4 @@ for edge in graph:
     corridor.ellipsoids.append(ellipse)
 #calculate a convex polygon per ellispoid
 # take union of all the polygons
+#test branching
