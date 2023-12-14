@@ -5,7 +5,7 @@ from Modelling.drone_dynamics import Quadrotor
 from Modelling.trajectory_generation import *
 import time
 import numpy as np
-from RRT.RRT import RRT
+from Planning.RRT import RRT
 import matplotlib.pyplot as plt
 
 
@@ -41,7 +41,7 @@ u0 = np.array([0, 0, 0, 0])
 x_bag[:, 0] = x0
 u_bag[:, 0] = u0
 
-pov = True
+pov = False
 for k in range(N - 1):
     drone_pos = x_bag[:3, k]
     drone_att = x_bag[3:6, k] * np.array([-1, 1, 1])
