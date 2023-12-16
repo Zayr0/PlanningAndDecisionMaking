@@ -8,6 +8,7 @@ import copy
 import math
 import random
 import time
+from scipy.spatial.transform import Rotation
 
 random.seed(0)
 
@@ -68,7 +69,7 @@ class RRT:
         self.start = start
         self.goal = goal
         self.node_sets = np.zeros((self.max_iter, 6))  # contain x y z and parent and cost and line_id
-        self.node_sets[0] = np.array(start + [-1, 0, -1])  #no parent and 0 cost
+        self.node_sets[0] = np.array(start + [-1, 0, -1])  # no parent and 0 cost
         self.node_sets_pointer += 1
         if render:
             p.addUserDebugPoints([start], [[1, 0, 0]], 10)
@@ -121,6 +122,80 @@ class RRT:
                 print('-----------------')
                 return path, path_distance
 
+    def informed_rrt_star_planning(self, start, goal, render=True):
+        self.start = start
+        self.goal = goal
+        self.node_sets = np.zeros((self.max_iter, 6))  # contain x y z and parent and cost and line_id
+        self.node_sets[0] = np.array(start + [-1, 0, -1])  # no parent and 0 cost
+        self.node_sets_pointer += 1
+        if render:
+            p.addUserDebugPoints([start], [[1, 0, 0]], 10)
+            p.addUserDebugPoints([goal], [[1, 0, 0]], 10)
+
+        Find_path = False
+        start = np.array(start)
+        goal = np.array(goal)
+        c_min = np.sqrt(np.sum((start-goal)**2))
+        c_max = float('inf')
+        x_center = (start+goal)/2
+        C = RRT.rotation_matrix_from_direction(goal-start, c_min)
+
+        while True:
+            if self.node_sets_pointer == 107:
+                a = 555
+            rnd = self.ellipsoid_sample(c_max, c_min, x_center, C)
+            parent_id, nearest_node, new_node = self.get_nearestNode_newNode(rnd)
+            no_collision = self.check_segment_collision(nearest_node, new_node)
+
+            if no_collision:
+                near_inds, near_distance_square = self.find_near_nodes(new_node)
+                if near_inds.size == 0:
+                    new_parent_id = parent_id
+                    new_distance = self.expand_dis
+                    cost = new_distance + self.node_sets[new_parent_id, 4]
+                else:
+                    cost, new_parent_id, near_inds_NC, near_distance_NC = \
+                         self.choose_new_parent(new_node, near_inds, near_distance_square)
+                    if cost == None:
+                        new_parent_id = parent_id
+                        new_distance = self.expand_dis
+                        cost = new_distance + self.node_sets[new_parent_id, 4]
+                        near_inds = np.array([])
+
+                if render:
+                    point_id = p.addUserDebugPoints([new_node.tolist()], [[0, 0, 1]], 5)
+                    line_id = p.addUserDebugLine(self.node_sets[new_parent_id, :3].tolist(), new_node.tolist(), [0, 1, 0], 3)
+                else:
+                    line_id = -1
+                self.node_sets[self.node_sets_pointer] = np.array(new_node.tolist()+[new_parent_id, cost, line_id])
+                self.node_sets_pointer += 1
+
+                if near_inds.size != 0:
+                    self.rewire(new_node, near_inds_NC, near_distance_NC, render)
+
+                if self.is_near_goal(new_node):
+                    if self.check_segment_collision(new_node, np.array(self.goal)):
+                        if render:
+                            p.addUserDebugLine(new_node.tolist(), self.goal, [0, 1, 0], 3)
+                        self.parents_of_goal.append(self.node_sets_pointer-1)
+                        Find_path = True
+
+                if Find_path:
+                    best_node_id = self.search_best_goal_node()
+                    _, path_distance = self.get_final_course2(best_node_id)
+                    if path_distance < c_max:
+                        c_max = path_distance
+                        print('New short distance: ', c_max)
+                    elif path_distance > c_max:
+                        raise ValueError('Bug!!!')
+                time.sleep(0.02)
+
+            if self.node_sets_pointer >= self.max_iter:
+                best_node_id = self.search_best_goal_node()
+                path, path_distance = self.get_final_course2(best_node_id)
+                print('-----------------')
+                return path, path_distance
+
     def sample(self):
         if random.randint(0, 100) > self.goal_sample_rate:
             rnd = np.array([random.uniform(self.x_range[0], self.x_range[1]),
@@ -142,7 +217,8 @@ class RRT:
 
         return minIndex, nearest_node, new_node
 
-    def check_segment_collision(self, nearest_node, new_node):
+    @staticmethod
+    def check_segment_collision(nearest_node, new_node):
         result = p.rayTest(nearest_node.tolist(), new_node.tolist())
         if result[0][0] == -1:  # be careful, there is maybe bug!
             return True
@@ -229,6 +305,46 @@ class RRT:
         costs = distance_goal_to_node + self.node_sets[self.parents_of_goal, 4]
         best_node_id = self.parents_of_goal[np.argmin(costs)]
 
-        return  best_node_id
+        return best_node_id
 
+    @staticmethod
+    def rotation_matrix_from_direction(direction_vector, c_min):
+        a1 = direction_vector / c_min
+        id1_t = np.array([1.0, 0.0, 0.0]).reshape(1, 3)
+        M = a1.reshape(-1, 1) @ id1_t
+        U, S, Vh = np.linalg.svd(M, True, True)
+        C = np.dot(np.dot(U, np.diag(
+            [1.0, 1.0, np.linalg.det(U) * np.linalg.det(np.transpose(Vh))])),
+                   Vh)
 
+        return C
+
+    @staticmethod
+    def sample_unit_ball():
+        a = random.random()
+        b = random.random()
+        r = np.random.uniform(0, 2*np.pi)
+        if b < a:
+            a, b = b, a
+
+        sample = (b * math.cos(2 * math.pi * a / b),
+                  b * math.sin(2 * math.pi * a / b))
+        sample_point = np.array([[1, 0, 0],
+                      [0, np.cos(r), -np.sin(r)],
+                      [0, np.sin(r), np.cos(r)]])@np.array([[sample[0]], [sample[1]], [0]])
+
+        return sample_point
+
+    def ellipsoid_sample(self, cMax, cMin, xCenter, C):
+        if cMax < float('inf'):
+            r = [cMax / 2.0,
+                 math.sqrt(cMax ** 2 - cMin ** 2) / 2.0,
+                 math.sqrt(cMax ** 2 - cMin ** 2) / 2.0]
+            L = np.diag(r)
+            xBall = self.sample_unit_ball()
+            # xBall = np.array([[random.uniform(-1, 1)], [0], [0]])  # Used for test
+            rnd = np.dot(np.dot(C, L), xBall).T[0] + xCenter
+        else:
+            rnd = self.sample()
+
+        return rnd

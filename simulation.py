@@ -1,8 +1,8 @@
 import pybullet as p
 #from environment.world import build_world
 from environment.world import Environment
-from modelling.drone_dynamics import Quadrotor
-from modelling.trajectory_generation import *
+from Modelling.drone_dynamics import Quadrotor
+from Modelling.trajectory_generation import *
 import time
 import numpy as np
 

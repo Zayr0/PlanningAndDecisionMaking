@@ -30,7 +30,8 @@ p.removeBody(droneID)
 rrt = RRT(x_range=(-5, 5), y_range=(-5, 5), z_range=(0, 1), expandDis=1.0, goalSampleRate=10, maxIter=maxIter, droneID=droneID)
 
 # path, path_distance = rrt.rrt_planning(start, goal)
-path, path_distance = rrt.rrt_star_planning(start, goal)
+# path, path_distance = rrt.rrt_star_planning(start, goal)
+path, path_distance = rrt.informed_rrt_star_planning(start, goal)
 
 # disconnect
 p.disconnect()
