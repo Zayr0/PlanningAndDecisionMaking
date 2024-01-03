@@ -3,10 +3,9 @@ import pybullet_data
 import time
 from environment.world import Environment
 import numpy as np
-from scipy.optimize import linprog
 
 from Sampler import Sampler
-from Bounds import Bounds
+from Helper.Bounds import Bounds
 
 p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())

@@ -41,7 +41,7 @@ u0 = np.array([0, 0, 0, 0])
 x_bag[:, 0] = x0
 u_bag[:, 0] = u0
 
-pov = False
+pov = True
 for k in range(N - 1):
     drone_pos = x_bag[:3, k]
     drone_att = x_bag[3:6, k] * np.array([-1, 1, 1])
@@ -55,7 +55,7 @@ for k in range(N - 1):
 
     if pov:
         camera_target_position = x_bag[:3, k]
-        camera_distance = 3
+        camera_distance = 10
         camera_yaw = x_bag[4, k]
         camera_pitch = x_bag[3,k]
         p.resetDebugVisualizerCamera(cameraDistance=camera_distance,
