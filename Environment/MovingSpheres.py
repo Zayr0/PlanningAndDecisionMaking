@@ -26,8 +26,8 @@ class MovingSpheres:
         return c2c - self.r*c2c/np.linalg.norm(c2c)
 
     #This function gives a hyperplane in the form of (a(x - x0) + b(y - y0) + c(z - z0) = 0)
-    #In an array as [x0, y0, z0, a, b, c], based on normal vectorn and a surface point.
+    #In an array as [x0, y0, z0, a, b, c], based on normal vector and a surface point.
     def calculate_tangent_plane(self, position):
         point = self.closest_point_on_surface(position)
         n = position - point
-        return np.array([point, n]) # Return plane
+        return np.array([point, n])  # Return plane

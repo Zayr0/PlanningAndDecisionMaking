@@ -5,7 +5,7 @@ import numpy as np
 from stl import mesh
 from scipy.spatial import ConvexHull
 import os
-from Obstacle import Obstacle
+from Environment.Obstacle import Obstacle
 
 
 class Environment:
