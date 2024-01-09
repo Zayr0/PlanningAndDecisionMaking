@@ -1,6 +1,6 @@
 import pybullet as p
-#from environment.world import build_world
-from environment.world import Environment
+#from Environment.world import build_world
+from Environment.Environment import Environment
 from Modelling.drone_dynamics import Quadrotor
 from Modelling.trajectory_generation import *
 import time
@@ -14,7 +14,7 @@ p.connect(p.GUI)
 p.setGravity(0, 0, -10)
 N = 300  # number of simulation steps
 
-# build the environment by loading obstacle .urdfs and obtaining their IDs
+# build the Environment by loading obstacle .urdfs and obtaining their IDs
 env = Environment()
 start = [0, -10, 5]
 

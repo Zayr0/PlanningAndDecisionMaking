@@ -1,5 +1,5 @@
 import pybullet as p
-from environment.world import Environment
+from Environment.Environment import Environment
 from Modelling.drone_dynamics import Quadrotor
 from Modelling.trajectory_generation import *
 import time

@@ -1,7 +1,7 @@
 import pybullet as p
 import pybullet_data
 import time
-from environment.world import Environment
+from Environment.Environment import Environment
 import numpy as np
 
 from Sampler import Sampler
