@@ -16,7 +16,7 @@ p.setGravity(0, 0, -10)
 N = 300  # number of simulation steps
 
 # build the Environment by loading obstacle .urdfs and obtaining their IDs
-env = Environment()
+env = Environment(type="Dynamic", basePosition=[0, 0, 0])
 start = [0, -10, 5]
 
 
@@ -32,7 +32,7 @@ node_sets[0] = np.array(start + [-1])
 
 rrt = RRT(x_range=(-env.width/2, env.width/2), y_range=(-env.depth/2, env.depth/2), z_range=(0, env.height), expandDis=1.0, goalSampleRate=10, maxIter=maxIter, droneID=droneID)
 path, path_distance = rrt.rrt_planning(start, goal)
-print(path)
+print('path:', path)
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
 x_ref = test_traj_wps(N, np.array(path))
 

@@ -1,7 +1,8 @@
 import numpy as np
 
 class MovingSpheres:
-    def __init__(self, radius=1.0, position=np.array([0.0, 0.0, 0.0]), velocity=np.array([None])):
+    def __init__(self, ID, radius=1.0, position=np.array([0.0, 0.0, 0.0]), velocity=np.array([None])):
+        self.ID = ID
         self.r = radius
         self.p = position
         self.v = velocity

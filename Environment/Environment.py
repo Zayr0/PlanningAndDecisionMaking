@@ -10,22 +10,26 @@ from Environment.MovingSpheres import MovingSpheres
 
 
 class Environment:
-    def __init__(self, numObstacles=0, type="Static"):
+    def __init__(self, numObstacles=0, type="Static", basePosition=[0,0,0]):
         self.width = 10
         self.depth = 10
         self.height = 10
+
+        self.basePosition = basePosition
         self.numObstacles = numObstacles
         self.obstacles = []
-        if type is "Static":
+
+        if type == "Static":
             self.build_static_world()
-        elif type is "Dynamic":
+        elif type == "Dynamic":
             self.build_dynamic_world()
 
     def build_dynamic_world(self):
-        radius = 1.0;
-        position = np.random.uniform(low=[- int(self.width/2), -int(self.depth/2), 0], high=[int(self.width/2), int(self.depth/2), - int(self.height/2)], size=(7, 3))
+        radius = 1.0
+        position = np.asarray(self.basePosition) + np.random.uniform(low=[- int(self.width/2), -int(self.depth/2), 0], high=[int(self.width/2), int(self.depth/2), - int(self.height/2)], size=(7, 3))
         for n in range(self.numObstacles):
-            self.obstacles.append(MovingSpheres(radius=radius, position=position))
+            sphereID = p.loadURDF("VisualSphere.urdf", position, useMaximalCoordinates=False)
+            self.obstacles.append(MovingSpheres(ID=sphereID, radius=radius, position=position))
 
     def build_static_world(self):
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -35,7 +39,7 @@ class Environment:
         for x in np.arange(- int(self.width/2), int(self.width/2), 2):
             for y in np.arange(- int(self.depth/2), int(self.depth/2), 2):
                 for z in np.arange(0, int(self.height), 2):
-                    initial_pose = [x, y, z]
+                    initial_pose = [x + self.basePosition[0], y + self.basePosition[1], z + self.basePosition[2]]
                     self.generate_obstacle(initial_pose)
         return
 
