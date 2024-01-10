@@ -6,17 +6,28 @@ from stl import mesh
 from scipy.spatial import ConvexHull
 import os
 from Environment.Obstacle import Obstacle
+from Environment.MovingSpheres import MovingSpheres
 
 
 class Environment:
-    def __init__(self):
+    def __init__(self, numObstacles=0, type="Static"):
         self.width = 10
         self.depth = 10
         self.height = 10
+        self.numObstacles = numObstacles
         self.obstacles = []
-        self.build_world()
+        if type is "Static":
+            self.build_static_world()
+        elif type is "Dynamic":
+            self.build_dynamic_world()
 
-    def build_world(self):
+    def build_dynamic_world(self):
+        radius = 1.0;
+        position = np.random.uniform(low=[- int(self.width/2), -int(self.depth/2), 0], high=[int(self.width/2), int(self.depth/2), - int(self.height/2)], size=(7, 3))
+        for n in range(self.numObstacles):
+            self.obstacles.append(MovingSpheres(radius=radius, position=position))
+
+    def build_static_world(self):
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.loadURDF("plane.urdf")
 
