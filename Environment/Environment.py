@@ -26,10 +26,13 @@ class Environment:
 
     def build_dynamic_world(self):
         radius = 1.0
-        position = np.asarray(self.basePosition) + np.random.uniform(low=[- int(self.width/2), -int(self.depth/2), 0], high=[int(self.width/2), int(self.depth/2), - int(self.height/2)], size=(7, 3))
+
         for n in range(self.numObstacles):
-            sphereID = p.loadURDF("VisualSphere.urdf", position, useMaximalCoordinates=False)
-            self.obstacles.append(MovingSpheres(ID=sphereID, radius=radius, position=position))
+            position = np.asarray(self.basePosition) + np.random.uniform(
+                low=[- int(self.width / 2), -int(self.depth / 2), 0],
+                high=[int(self.width / 2), int(self.depth / 2), self.height], size=(1, 3))
+            sphereID = p.loadURDF("Environment/VisualSphere.urdf", position[0], useMaximalCoordinates=False)
+            self.obstacles.append(MovingSpheres(ID=sphereID, radius=radius, position=position[0]))
 
     def build_static_world(self):
         p.setAdditionalSearchPath(pybullet_data.getDataPath())

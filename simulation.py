@@ -12,16 +12,16 @@ import matplotlib.pyplot as plt
 
 # connect
 p.connect(p.GUI)
-p.setGravity(0, 0, -10)
+p.setGravity(0, 0, 0)
 N = 300  # number of simulation steps
 
 # build the Environment by loading obstacle .urdfs and obtaining their IDs
-env = Environment(type="Dynamic", basePosition=[0, 0, 0])
+env = Environment(numObstacles=100, type="Dynamic", basePosition=[0, 0, 0])
 start = [0, -10, 5]
 
 
 # load the drone and specify its dynamics
-droneID = p.loadURDF("sphere2.urdf", start, p.getQuaternionFromEuler([0, 0, 0]))
+droneID = p.loadURDF("Environment/VisualSphere.urdf", start, p.getQuaternionFromEuler([0, 0, 0]))
 drone = Quadrotor()
 
 maxIter = 200
