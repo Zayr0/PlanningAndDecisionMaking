@@ -12,3 +12,12 @@
 * dynamic obstacles representation - Maria
 * collision avoidance - Long
 * controller - Leon
+
+* integrate min snap - Leon
+* octo tree/radius method - Jep
+* Velocity Obstacles - Jep
+* MPC - Long
+* Metrics and Experiment
+* Report
+* Presentation
+* Video!
