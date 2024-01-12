@@ -1,15 +1,21 @@
 import numpy as np
+import pybullet as pb
 
 class MovingSpheres:
     def __init__(self, ID, radius=1.0, position=np.array([0.0, 0.0, 0.0]), velocity=np.array([None])):
         self.ID = ID
         self.r = radius
         self.p = position
-        self.v = velocity
+        maxVel = 1.0
+        self.v = np.random.uniform(low=[-maxVel, -maxVel, -maxVel], high=[maxVel, maxVel, maxVel], size=(3, ))
 
     #Update and move the sphere.
     def update(self, dt):
         self.p += self.v*dt
+        pb.resetBasePositionAndOrientation(self.ID, self.p, pb.getQuaternionFromEuler([0, 0, 0]))
+
+    def center_dist(self, position):
+        return np.linalg.norm(position - self.p)
 
     #This function returns the smallest distance from a position to the surface of the sphere.
     def min_dist(self, position):

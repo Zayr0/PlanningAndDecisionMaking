@@ -22,7 +22,18 @@ start = [0, -10, 5]
 
 # load the drone and specify its dynamics
 droneID = p.loadURDF("Environment/VisualSphere.urdf", start, p.getQuaternionFromEuler([0, 0, 0]))
+p.changeVisualShape(droneID, -1, rgbaColor=[0, 1, 0, 1])
 drone = Quadrotor()
+
+collisionFilterGroup = 0
+collisionFilterMask = 0
+enableCollision = 1
+
+p.setCollisionFilterGroupMask(droneID, -1, collisionFilterGroup, collisionFilterMask)
+
+for ob in env.obstacles:
+    p.setCollisionFilterGroupMask(ob.ID, -1, collisionFilterGroup, collisionFilterMask)
+    p.setCollisionFilterPair(droneID, ob.ID, -1, -1, enableCollision)
 
 maxIter = 200
 node_sets = np.zeros((maxIter, 4))  # contain x y z and parent
@@ -42,6 +53,8 @@ u0 = np.array([0, 0, 0, 0])
 x_bag[:, 0] = x0
 u_bag[:, 0] = u0
 
+dt = 0.02
+
 pov = False
 for k in range(N - 1):
     drone_pos = x_bag[:3, k]
@@ -52,7 +65,15 @@ for k in range(N - 1):
     p.stepSimulation()
 
     x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k])
-    time.sleep(0.02)
+
+    time.sleep(dt)
+
+    for ob in env.obstacles:
+        ob.update(dt)
+        contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)
+        if len(contactPoints) > 0:
+            print('Collision at: ', contactPoints, 'with object:', ob.ID)
+            p.changeVisualShape(ob.ID, -1, rgbaColor=[1, 0, 0, 0.9])
 
     if pov:
         camera_target_position = x_bag[:3, k]
