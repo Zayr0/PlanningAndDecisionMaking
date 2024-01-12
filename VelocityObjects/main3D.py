@@ -5,7 +5,7 @@ from Bot import Bot
 from VelocityObjects.VelocityObstacles import VelocityObstacles
 from Helper.Bounds import Bounds
 import matplotlib.pyplot as plt
-from environment.world import Environment
+from Environment.Environment import Environment
 import pybullet_data
 
 p.connect(p.GUI)
@@ -30,12 +30,10 @@ numBots = 10
 bots = []
 
 for i in range(1, numBots + 1):
-    x = np.random.uniform(bounds.xMin, bounds.xMax)
-    y = np.random.uniform(bounds.yMin, bounds.yMax)
-    z = np.random.uniform(bounds.zMin, bounds.zMax)
+    position = np.random.uniform(low=[bounds.xMin, bounds.yMin, bounds.zMin], high=[bounds.xMax, bounds.yMax, bounds.zMax], size=(1, 3))
 
-    botID = p.loadURDF("VisualSphere.urdf", [x, y, z], useMaximalCoordinates=False)
-    bots.append(Bot(i, bounds, np.array([x, y, z])))
+    botID = p.loadURDF("VisualSphere.urdf", position[0], useMaximalCoordinates=False)
+    bots.append(Bot(i, bounds, position[0]))
 
     bots[botID - 1].drawStartGoal()
 
@@ -47,7 +45,7 @@ dt = 1.0/240.
 VO = VelocityObstacles(3, 1/10)
 
 while (p.isConnected()):
-    newVel = VO.detInputBySampling(robot, bots)
+    newVel = VO.detInputBySampling3D(robot, bots)
     robot.update(bots, dt, newVel)
 
     bots.append(robot)
@@ -56,7 +54,7 @@ while (p.isConnected()):
         bots.remove(b)
 
         if True:
-            newVel = VO.detInputBySampling(b, bots)
+            newVel = VO.detInputBySampling3D(b, bots)
             b.update(bots, dt, newVel)
         else:
             b.update(bots, dt)

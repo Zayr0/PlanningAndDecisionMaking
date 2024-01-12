@@ -13,7 +13,7 @@ class VelocityObstacles:
         self.numSamples = 100
 
 
-    def calcVO(self, currentObstacle, movingObstacles):
+    def calcVO3D(self, currentObstacle, movingObstacles):
         rows, cols = (len(movingObstacles), int((self.tau - self.epsilon)/self.dt))
         Spheres = [[None]*cols]*rows
         for mo in range(len(movingObstacles)):
@@ -24,18 +24,18 @@ class VelocityObstacles:
                 Spheres[mo][i] = Sphere(pos, radius)
         return Spheres
 
-    def detInputBySampling(self, currentObject, movingObjects):
+    def detInputBySampling3D(self, currentObject, movingObjects):
         # sample
         # reject samples in VO_{i|j}
         # determine cost J(u) for u
         # keep low cost u
-        Spheres = self.calcVO(currentObject, movingObjects)
+        Spheres = self.calcVO3D(currentObject, movingObjects)
 
         lowestCost = np.inf
         bestSample = None
         for i in range(self.numSamples):
             sample = np.random.normal(currentObject.desiredVelocity())
-            goodSample = self.checkSample(sample, Spheres)
+            goodSample = self.checkSample3D(sample, Spheres)
             if goodSample:
                 cost = self.calcCost(currentObject.desiredVelocity(), sample)
 
@@ -44,7 +44,7 @@ class VelocityObstacles:
                     bestSample = sample
         return bestSample
 
-    def checkSample(self, s, Spheres):
+    def checkSample3D(self, s, Spheres):
         x = len(Spheres)
         y = len(Spheres[0])
 
@@ -63,7 +63,7 @@ class VelocityObstacles:
         return np.linalg.norm(prefU - sampleU)
 
 
-    def detInputByMinimization(self, prefU, movingObjects):
+    def detInputByMinimization3D(self, prefU, movingObjects):
         Wu = 1 * np.eye(prefU.size[0])
         u = cp.Variable((prefU.size))
 
@@ -72,7 +72,7 @@ class VelocityObstacles:
 
         uWu += cp.quad_form(u - prefU, Wu)
         for mo in movingObjects:
-            VO = self.calcVO(mo);
+            VO = self.calcVO3D(mo);
             constraints += [u != VO]
 
 
