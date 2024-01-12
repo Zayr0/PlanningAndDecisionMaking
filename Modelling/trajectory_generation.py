@@ -28,4 +28,5 @@ def test_traj_wps(N, wps):
     x_xyz_ref = np.vstack((x_x_ref, x_y_ref, x_z_ref))
 
     x_ref = np.vstack((x_xyz_ref, np.zeros((9, N - n_recip))))
+    x_ref = np.hstack((x_ref, np.repeat(x_ref[:, -1].reshape((12,1)), N-x_ref.shape[1], axis=1)))
     return x_ref

@@ -26,7 +26,7 @@ p.resetDebugVisualizerCamera(cameraDistance=20,
                                      cameraTargetPosition=[0, 0, 0])
 dt = 0.02
 pov = False
-sfp = True
+sfp = False
 
 
 

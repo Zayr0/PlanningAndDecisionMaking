@@ -71,16 +71,16 @@ class Environment:
 
         # Generate random 3D points within specified intervals
         #np.random.seed(42)
-        # #points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
-        # points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(7, 3))
-        # #points = np.vstack([points_base, points_random])
-        # points = points_random
-        # points = points + np.tile(np.array([x_off, y_off, z_off]), (points.shape[0], 1))
-
-        points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
-        points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(1, 3))
-        points = np.vstack([points_base, points_random])
+        #points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
+        points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(7, 3))
+        #points = np.vstack([points_base, points_random])
+        points = points_random
         points = points + np.tile(np.array([x_off, y_off, z_off]), (points.shape[0], 1))
+
+        # points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
+        # points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(1, 3))
+        # points = np.vstack([points_base, points_random])
+        # points = points + np.tile(np.array([x_off, y_off, z_off]), (points.shape[0], 1))
         # Compute the convex hull
         hull = ConvexHull(points)
 

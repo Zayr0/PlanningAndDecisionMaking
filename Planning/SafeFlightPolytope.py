@@ -20,7 +20,6 @@ def get_sfp(drone_pos, env, polytope_vertices=False):
                        [env.Bounds.yMax + env.Bounds.center[1] + slack],
                        [-env.Bounds.xMin - env.Bounds.center[0] + slack],
                        [env.Bounds.xMax + env.Bounds.center[0] + slack]])
-    print(b_ineq)
     for obs in env.obstacles:
         zi = obs.min_dist(root, get_closest_point=True)
         vector = zi - root
@@ -28,7 +27,6 @@ def get_sfp(drone_pos, env, polytope_vertices=False):
         b = np.dot(vector, zi)
         A_ineq = np.vstack((A_ineq, A))
         b_ineq = np.vstack((b_ineq, b))
-        print("Closest point", zi)
     if polytope_vertices:
         vertices = compute_polytope_vertices(A_ineq, b_ineq)
         return A_ineq, b_ineq, vertices
