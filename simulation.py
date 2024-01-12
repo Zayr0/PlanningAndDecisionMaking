@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 
 
 #Setup pybullet simulation variables
+
 p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
@@ -36,6 +37,7 @@ dynamicEnv = Environment(numObstacles=90, type="Dynamic", bounds=dynamicBounds)
 
 
 # Define start and goal for the drone
+
 start = [0, -20, 5]
 goal = [0, 0, 5]
 
