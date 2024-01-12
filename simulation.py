@@ -82,6 +82,7 @@ path, path_distance = rrt.rrt_planning(start, goal)
 N = 300
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
 x_ref = test_traj_wps(N, np.array(path))
+print(min_snap(N, np.array(path)))
 
 
 x0 = np.array([0, -10, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0])
