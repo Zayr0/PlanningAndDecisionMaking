@@ -14,6 +14,7 @@
 * controller - Leon
 
 * integrate min snap - Leon
+* calculate closest safe point within feasible set, from which recalculation can be done
 * octo tree/radius method - Jep
 * Velocity Obstacles - Jep
 * MPC - Long
