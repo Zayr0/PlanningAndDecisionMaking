@@ -8,19 +8,19 @@ import copy
 import math
 import random
 import time
+from Helper.Bounds import Bounds
 
 random.seed(0)
 
 class RRT:
 
-    def __init__(self, x_range=(-5, 5), y_range=(-5, 5), z_range=(0, 1),
+    def __init__(self, bounds=Bounds([[5, 5], [5, 5], [5, 5]]),
                  expandDis=1.0, goalSampleRate=10, maxIter=200, droneID=0):
 
         self.start = None
         self.goal = None
-        self.x_range = x_range
-        self.y_range = y_range
-        self.z_range = z_range
+        self.Bounds = bounds
+
         self.expand_dis = expandDis
         self.goal_sample_rate = goalSampleRate
         self.max_iter = maxIter
@@ -62,9 +62,9 @@ class RRT:
 
     def sample(self):
         if random.randint(0, 100) > self.goal_sample_rate:
-            rnd = np.array([random.uniform(self.x_range[0], self.x_range[1]),
-                            random.uniform(self.y_range[0], self.y_range[1]),
-                            random.uniform(self.z_range[0], self.z_range[1])])
+            rnd = np.array([random.uniform(self.Bounds.xMin, self.Bounds.xMax) + self.Bounds.center[0],
+                            random.uniform(self.Bounds.yMin, self.Bounds.yMax) + self.Bounds.center[1],
+                            random.uniform(self.Bounds.zMin, self.Bounds.zMax) + self.Bounds.center[2]])
         else:  # goal point sampling
             rnd = np.array(self.goal)
         return rnd

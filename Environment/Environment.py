@@ -7,15 +7,13 @@ from scipy.spatial import ConvexHull
 import os
 from Environment.Obstacle import Obstacle
 from Environment.MovingSpheres import MovingSpheres
+from Helper.Bounds import Bounds
 
 
 class Environment:
-    def __init__(self, numObstacles=0, type="Static", basePosition=[0,0,0]):
-        self.width = 10
-        self.depth = 10
-        self.height = 10
+    def __init__(self, numObstacles=0, type="Static", bounds=Bounds([[5, 5], [5, 5], [5, 5]])):
+        self.Bounds = bounds
 
-        self.basePosition = basePosition
         self.numObstacles = numObstacles
         self.obstacles = []
 
@@ -25,13 +23,16 @@ class Environment:
             self.build_dynamic_world()
 
     def build_dynamic_world(self):
+        self.Bounds.drawBounds()
+
         radius = 1.0
         left2Spawn = self.numObstacles
 
         while left2Spawn > 0:
-            position = np.asarray(self.basePosition) + np.random.uniform(
-                low=[-int(self.width / 2), -int(self.depth / 2), 0],
-                high=[int(self.width / 2), int(self.depth / 2), self.height], size=(1, 3))
+            position = np.asarray(self.Bounds.center) + np.random.uniform(
+                low=[self.Bounds.xMin, self.Bounds.yMin, self.Bounds.zMin],
+                high=[self.Bounds.xMax, self.Bounds.yMax, self.Bounds.zMax], size=(1, 3))
+
 
             positionFree = True
 
@@ -47,14 +48,16 @@ class Environment:
                 self.obstacles.append(MovingSpheres(ID=sphereID, radius=radius, position=position[0]))
 
     def build_static_world(self):
+        self.Bounds.drawBounds()
+
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.loadURDF("plane.urdf")
 
         # build some obstacles
-        for x in np.arange(- int(self.width/2), int(self.width/2), 2):
-            for y in np.arange(- int(self.depth/2), int(self.depth/2), 2):
-                for z in np.arange(0, int(self.height), 2):
-                    initial_pose = [x + self.basePosition[0], y + self.basePosition[1], z + self.basePosition[2]]
+        for x in np.arange(self.Bounds.xMin, self.Bounds.xMax, 2):
+            for y in np.arange(self.Bounds.yMin, self.Bounds.yMax, 2):
+                for z in np.arange(self.Bounds.zMin, self.Bounds.zMax, 2):
+                    initial_pose = [x + self.Bounds.center[0], y + self.Bounds.center[1], z + self.Bounds.center[2]]
                     self.generate_obstacle(initial_pose)
         return
 

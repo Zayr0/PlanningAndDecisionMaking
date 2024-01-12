@@ -5,6 +5,7 @@ from Environment.Obstacle import Obstacle
 from Modelling.drone_dynamics import Quadrotor
 from Modelling.trajectory_generation import *
 import time
+from Helper.Bounds import Bounds
 import numpy as np
 from Planning.RRT import RRT
 import matplotlib.pyplot as plt
@@ -12,12 +13,25 @@ import matplotlib.pyplot as plt
 
 # connect
 p.connect(p.GUI)
+p.resetDebugVisualizerCamera(cameraDistance=20,
+                                     cameraYaw=90,
+                                     cameraPitch=-30,
+                                     cameraTargetPosition=[0,0,0])
+
+
+
 p.setGravity(0, 0, 0)
 N = 300  # number of simulation steps
 
 # build the Environment by loading obstacle .urdfs and obtaining their IDs
-env = Environment(numObstacles=100, type="Dynamic", basePosition=[0, 0, 0])
-start = [0, -10, 5]
+
+staticBounds = Bounds([[-5, 5], [-5, 5],[0, 10]], center=[0, -6, 0])
+staticEnv = Environment(type="Static", bounds=staticBounds)
+
+dynamicBounds = Bounds([[-5, 5], [-5, 5],[0, 10]], center=[0, 6, 0])
+dynamicEnv = Environment(numObstacles=100, type="Dynamic", bounds=dynamicBounds)
+
+start = [0, -20, 5]
 
 
 # load the drone and specify its dynamics
@@ -31,17 +45,17 @@ enableCollision = 1
 
 p.setCollisionFilterGroupMask(droneID, -1, collisionFilterGroup, collisionFilterMask)
 
-for ob in env.obstacles:
+for ob in dynamicEnv.obstacles:
     p.setCollisionFilterGroupMask(ob.ID, -1, collisionFilterGroup, collisionFilterMask)
     p.setCollisionFilterPair(droneID, ob.ID, -1, -1, enableCollision)
 
 maxIter = 200
 node_sets = np.zeros((maxIter, 4))  # contain x y z and parent
-goal = [3, 10, 2]
+goal = [0, 20, 5]
 start = list(p.getBasePositionAndOrientation(droneID)[0])
 node_sets[0] = np.array(start + [-1])
 
-rrt = RRT(x_range=(-env.width/2, env.width/2), y_range=(-env.depth/2, env.depth/2), z_range=(0, env.height), expandDis=1.0, goalSampleRate=10, maxIter=maxIter, droneID=droneID)
+rrt = RRT(bounds=staticEnv.Bounds, expandDis=1.0, goalSampleRate=10, maxIter=maxIter, droneID=droneID)
 path, path_distance = rrt.rrt_planning(start, goal)
 print('path:', path)
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
@@ -68,7 +82,7 @@ for k in range(N - 1):
 
     time.sleep(dt)
 
-    for ob in env.obstacles:
+    for ob in dynamicEnv.obstacles:
         ob.update(dt)
         contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)
         if len(contactPoints) > 0:
