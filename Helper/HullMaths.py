@@ -63,7 +63,7 @@ def draw_polytope(points):
 
 def draw_polytope2(points):
     print(points)
-    hull = ConvexHull(points)
+    #hull = ConvexHull(points)
 
     # Get the convex hull vertices
     hull_vertices = points #points[hull.vertices]

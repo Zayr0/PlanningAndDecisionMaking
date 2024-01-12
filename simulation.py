@@ -26,7 +26,7 @@ p.resetDebugVisualizerCamera(cameraDistance=20,
                                      cameraTargetPosition=[0, 0, 0])
 dt = 0.02
 pov = False
-sfp = False
+sfp = True
 
 
 
@@ -98,7 +98,7 @@ for k in range(N - 1):
     drone_att_quaternion = p.getQuaternionFromEuler(drone_att)
 
     if sfp and k%10 == 0:
-        A_ineq, b_ineq, vertices = get_sfp(drone_pos, env, polytope_vertices=True)
+        A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True)
         print(vertices)
         #p.addUserDebugPoints([entry.tolist() for entry in vertices], [[1, 1, 1] for _ in vertices], 30)
         sfp_id = draw_polytope2(vertices)

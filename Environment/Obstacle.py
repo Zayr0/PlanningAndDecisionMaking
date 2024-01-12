@@ -9,7 +9,7 @@ class Obstacle:
         self.constr_mat_A = 0
         self.constr_mat_b = 0
 
-    def min_dist(self, zj_val):
+    def min_dist(self, zj_val, get_closest_point=False):
         """this formulates the QP optimization to obtain the shortest distance between
         the polytope i of this obstacle and a point j"""
         zi = cp.Variable(3)
@@ -22,4 +22,6 @@ class Obstacle:
 
         problem = cp.Problem(cp.Minimize(cost), constraints)
         result = problem.solve(solver=cp.OSQP)
+        if get_closest_point:
+            return zi.value
         return float(result)

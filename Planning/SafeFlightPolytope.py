@@ -1,5 +1,7 @@
 import numpy as np
 from pypoman import compute_polytope_vertices
+from Helper.Bounds import Bounds
+
 
 
 def get_sfp(drone_pos, env, polytope_vertices=False):
@@ -12,7 +14,8 @@ def get_sfp(drone_pos, env, polytope_vertices=False):
                        [-1, 0, 0],
                        [1, 0, 0]])
     slack = 1
-    b_ineq = np.array([[0-slack], [env.height + slack], [env.width/2 + slack], [env.width/2 + slack], [env.depth/2 + slack], [env.depth/2 + slack]])
+    b_ineq = np.array([[env.Bounds.zMin + env.Bounds.center[2]-slack], [env.Bounds.zMax + env.Bounds.center[2] + slack], [env.Bounds.xMax + env.Bounds.center[0] + slack], [env.Bounds.xMax + env.Bounds.center[0] + slack], [env.Bounds.yMax + env.Bounds.center[1] + slack], [env.Bounds.yMax + env.Bounds.center[1] + slack]])
+
     for obs in env.obstacles:
         zi = obs.min_dist(root, get_closest_point=True)
         vector = zi - root
