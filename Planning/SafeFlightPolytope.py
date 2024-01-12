@@ -3,8 +3,7 @@ from pypoman import compute_polytope_vertices
 from Helper.Bounds import Bounds
 
 
-
-def get_sfp(drone_pos, env, polytope_vertices=False):
+def get_sfp(drone_pos, env, polytope_vertices=False, proximity_only=False):
     root = drone_pos
     closest_points = []
     A_ineq = np.array([[0, 0, -1],
@@ -20,7 +19,12 @@ def get_sfp(drone_pos, env, polytope_vertices=False):
                        [env.Bounds.yMax + env.Bounds.center[1] + slack],
                        [-env.Bounds.xMin - env.Bounds.center[0] + slack],
                        [env.Bounds.xMax + env.Bounds.center[0] + slack]])
-    for obs in env.obstacles:
+    obs_near = []
+    if proximity_only:
+        obs_near = [obs for obs in env.obstacles if np.linalg.norm(obs.center - drone_pos)<=10]
+    else:
+        obs_near = env.obstacles
+    for obs in obs_near:
         zi = obs.min_dist(root, get_closest_point=True)
         vector = zi - root
         A = vector
