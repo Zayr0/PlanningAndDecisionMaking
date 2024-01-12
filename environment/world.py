@@ -6,6 +6,7 @@ import numpy as np
 from stl import mesh
 from scipy.spatial import ConvexHull
 import os
+from Helper.HullMaths import *
 
 
 class Environment:
@@ -21,6 +22,10 @@ class Environment:
         p.loadURDF("plane.urdf")
 
         # build some obstacles
+        #initial_pose = [1, 1, 0]
+        #self.generate_obstacle(initial_pose)
+        #self.generate_obstacle([0, 2, 1])
+
         for x in np.arange(- int(self.width/2), int(self.width/2), 2):
             for y in np.arange(- int(self.depth/2), int(self.depth/2), 2):
                 for z in np.arange(0, int(self.height), 2):
@@ -33,14 +38,13 @@ class Environment:
         # Define the intervals for random points
         xmin, xmax = -1.0, 1.0
         ymin, ymax = -1.0, 1.0
-        zmin, zmax = -1.0, 2
+        zmin, zmax = 0.1, 2
 
         # Generate random 3D points within specified intervals
         #np.random.seed(42)
-        #points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
-        points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(7, 3))
-        #points = np.vstack([points_base, points_random])
-        points = points_random
+        points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
+        points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(1, 3))
+        points = np.vstack([points_base, points_random])
         points = points + np.tile(np.array([x_off, y_off, z_off]), (points.shape[0], 1))
         # Compute the convex hull
         hull = ConvexHull(points)
@@ -70,7 +74,8 @@ class Environment:
         )
         p.changeVisualShape(obstacle_body_id, -1, rgbaColor=[1, 0, 0, 1])  # red color
         obs1 = Obstacle(obstacle_body_id)
-        obs1.constr_mat_A, obs1.constr_mat_b = hull.equations[:, :-1], -1 * hull.equations[:,-1]
+        A, b = hull.equations[:, :-1], -1 * hull.equations[:,-1]
+        obs1.constr_mat_A, obs1.constr_mat_b = remove_duplicate_inequalities(A, b)
         self.obstacles.append(obs1)
         return
 

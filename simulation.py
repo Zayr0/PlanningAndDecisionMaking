@@ -6,6 +6,8 @@ from Modelling.trajectory_generation import *
 import time
 import numpy as np
 from Planning.RRT import RRT
+from Planning.SafeFlightPolytope import get_sfp
+from Helper.HullMaths import *
 import matplotlib.pyplot as plt
 
 
@@ -31,7 +33,7 @@ node_sets[0] = np.array(start + [-1])
 
 rrt = RRT(x_range=(-env.width/2, env.width/2), y_range=(-env.depth/2, env.depth/2), z_range=(0, env.height), expandDis=1.0, goalSampleRate=10, maxIter=maxIter, droneID=droneID)
 path, path_distance = rrt.rrt_planning(start, goal)
-print(path)
+#print(path)
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
 x_ref = test_traj_wps(N, np.array(path))
 
@@ -41,11 +43,20 @@ u0 = np.array([0, 0, 0, 0])
 x_bag[:, 0] = x0
 u_bag[:, 0] = u0
 
-pov = True
+sfp = False
+pov = False
 for k in range(N - 1):
     drone_pos = x_bag[:3, k]
     drone_att = x_bag[3:6, k] * np.array([-1, 1, 1])
     drone_att_quaternion = p.getQuaternionFromEuler(drone_att)
+
+    if sfp and k%10 == 0:
+        A_ineq, b_ineq, vertices = get_sfp(drone_pos, env, polytope_vertices=True)
+        print(vertices)
+        #p.addUserDebugPoints([entry.tolist() for entry in vertices], [[1, 1, 1] for _ in vertices], 30)
+        sfp_id = draw_polytope2(vertices)
+        #time.sleep(0.5)
+        #p.removeBody(sfp_id)
 
     p.resetBasePositionAndOrientation(droneID, drone_pos, drone_att_quaternion)
     p.stepSimulation()
