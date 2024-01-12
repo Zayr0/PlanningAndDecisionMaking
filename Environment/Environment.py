@@ -55,9 +55,9 @@ class Environment:
         p.loadURDF("plane.urdf")
 
         # build some obstacles
-        for x in np.arange(self.Bounds.xMin, self.Bounds.xMax, 2):
-            for y in np.arange(self.Bounds.yMin, self.Bounds.yMax, 2):
-                for z in np.arange(self.Bounds.zMin, self.Bounds.zMax, 2):
+        for x in np.arange(self.Bounds.xMin, self.Bounds.xMax, 4):
+            for y in np.arange(self.Bounds.yMin, self.Bounds.yMax, 4):
+                for z in np.arange(self.Bounds.zMin, self.Bounds.zMax, 4):
                     initial_pose = [x + self.Bounds.center[0], y + self.Bounds.center[1], z + self.Bounds.center[2]]
                     self.generate_obstacle(initial_pose)
         return
@@ -71,10 +71,15 @@ class Environment:
 
         # Generate random 3D points within specified intervals
         #np.random.seed(42)
-        #points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
-        points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(7, 3))
-        #points = np.vstack([points_base, points_random])
-        points = points_random
+        # #points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
+        # points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(7, 3))
+        # #points = np.vstack([points_base, points_random])
+        # points = points_random
+        # points = points + np.tile(np.array([x_off, y_off, z_off]), (points.shape[0], 1))
+
+        points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
+        points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(1, 3))
+        points = np.vstack([points_base, points_random])
         points = points + np.tile(np.array([x_off, y_off, z_off]), (points.shape[0], 1))
         # Compute the convex hull
         hull = ConvexHull(points)

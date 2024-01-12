@@ -83,8 +83,7 @@ N = 300
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
 x_ref = test_traj_wps(N, np.array(path))
 
-
-x0 = np.array([0, -10, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+x0 = np.array([start[0], start[1], start[2], 0, 0, 0, 0, 0, 0, 0, 0, 0])
 u0 = np.array([0, 0, 0, 0])
 x_bag[:, 0] = x0
 u_bag[:, 0] = u0

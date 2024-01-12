@@ -13,9 +13,14 @@ def get_sfp(drone_pos, env, polytope_vertices=False):
                        [0, 1, 0],
                        [-1, 0, 0],
                        [1, 0, 0]])
-    slack = 1
-    b_ineq = np.array([[env.Bounds.zMin + env.Bounds.center[2]-slack], [env.Bounds.zMax + env.Bounds.center[2] + slack], [env.Bounds.xMax + env.Bounds.center[0] + slack], [env.Bounds.xMax + env.Bounds.center[0] + slack], [env.Bounds.yMax + env.Bounds.center[1] + slack], [env.Bounds.yMax + env.Bounds.center[1] + slack]])
-
+    slack = 3
+    b_ineq = np.array([[-env.Bounds.zMin - env.Bounds.center[2] + slack],
+                       [env.Bounds.zMax + env.Bounds.center[2] + slack],
+                       [- env.Bounds.yMin - env.Bounds.center[1] + slack],
+                       [env.Bounds.yMax + env.Bounds.center[1] + slack],
+                       [-env.Bounds.xMin - env.Bounds.center[0] + slack],
+                       [env.Bounds.xMax + env.Bounds.center[0] + slack]])
+    print(b_ineq)
     for obs in env.obstacles:
         zi = obs.min_dist(root, get_closest_point=True)
         vector = zi - root
