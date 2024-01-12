@@ -6,30 +6,59 @@ import numpy as np
 from stl import mesh
 from scipy.spatial import ConvexHull
 import os
+from Environment.Obstacle import Obstacle
+from Environment.MovingSpheres import MovingSpheres
+from Helper.Bounds import Bounds
 from Helper.HullMaths import *
 
-
 class Environment:
-    def __init__(self):
-        self.width = 10
-        self.depth = 10
-        self.height = 10
-        self.obstacles = []
-        self.build_world()
+    def __init__(self, numObstacles=0, type="Static", bounds=Bounds([[5, 5], [5, 5], [5, 5]])):
+        self.Bounds = bounds
 
-    def build_world(self):
+        self.numObstacles = numObstacles
+        self.obstacles = []
+
+        if type == "Static":
+            self.build_static_world()
+        elif type == "Dynamic":
+            self.build_dynamic_world()
+
+    def build_dynamic_world(self):
+        self.Bounds.drawBounds()
+
+        radius = 1.0
+        left2Spawn = self.numObstacles
+
+        while left2Spawn > 0:
+            position = np.asarray(self.Bounds.center) + np.random.uniform(
+                low=[self.Bounds.xMin, self.Bounds.yMin, self.Bounds.zMin],
+                high=[self.Bounds.xMax, self.Bounds.yMax, self.Bounds.zMax], size=(1, 3))
+
+
+            positionFree = True
+
+            for ob in self.obstacles:
+                surfaceDist = ob.center_dist(position) - 2*radius
+                if surfaceDist <= 0.0:
+                    positionFree = False
+
+            if positionFree:
+                left2Spawn -= 1
+                sphereID = p.loadURDF("Environment/VisualSphere.urdf", position[0], useMaximalCoordinates=False)
+                p.changeVisualShape(sphereID, -1, rgbaColor=[0, 0, 1, 0.9])
+                self.obstacles.append(MovingSpheres(ID=sphereID, radius=radius, position=position[0]))
+
+    def build_static_world(self):
+        self.Bounds.drawBounds()
+
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.loadURDF("plane.urdf")
 
         # build some obstacles
-        #initial_pose = [1, 1, 0]
-        #self.generate_obstacle(initial_pose)
-        #self.generate_obstacle([0, 2, 1])
-
-        for x in np.arange(- int(self.width/2), int(self.width/2), 2):
-            for y in np.arange(- int(self.depth/2), int(self.depth/2), 2):
-                for z in np.arange(0, int(self.height), 2):
-                    initial_pose = [x, y, z]
+        for x in np.arange(self.Bounds.xMin, self.Bounds.xMax, 2):
+            for y in np.arange(self.Bounds.yMin, self.Bounds.yMax, 2):
+                for z in np.arange(self.Bounds.zMin, self.Bounds.zMax, 2):
+                    initial_pose = [x + self.Bounds.center[0], y + self.Bounds.center[1], z + self.Bounds.center[2]]
                     self.generate_obstacle(initial_pose)
         return
 
@@ -42,9 +71,10 @@ class Environment:
 
         # Generate random 3D points within specified intervals
         #np.random.seed(42)
-        points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
-        points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(1, 3))
-        points = np.vstack([points_base, points_random])
+        #points_base = np.array([[0.5, 0.5, 0], [0.5, -0.5, 0], [-0.5, 0.5, 0], [-0.5, -0.5, 0]])
+        points_random = np.random.uniform(low=[xmin, ymin, zmin], high=[xmax, ymax, zmax], size=(7, 3))
+        #points = np.vstack([points_base, points_random])
+        points = points_random
         points = points + np.tile(np.array([x_off, y_off, z_off]), (points.shape[0], 1))
         # Compute the convex hull
         hull = ConvexHull(points)
@@ -86,28 +116,3 @@ class Environment:
             dist_min = np.min([dist_min, dist_new])
         return dist_min
 
-
-class Obstacle:
-    def __init__(self, p_id):
-        self.p_id = p_id
-        self.center = 0
-        self.vertices = []
-        self.constr_mat_A = 0
-        self.constr_mat_b = 0
-
-    def min_dist(self, zj_val, get_closest_point=False):
-        """this formulates the QP optimization to obtain the shortest distance between
-        the polytope i of this obstacle and a point j"""
-        zi = cp.Variable(3)
-        zj = cp.Variable(3)  # this could also be put as a constant, but in case we use a bounding box for the drone later, this must be a decision variable too
-
-        cost = cp.quad_form(zi - zj, np.eye(3))
-        constraints = []
-        constraints += [self.constr_mat_A @ zi <= self.constr_mat_b]
-        constraints += [zj == zj_val]
-
-        problem = cp.Problem(cp.Minimize(cost), constraints)
-        result = problem.solve(solver=cp.OSQP)
-        if get_closest_point:
-            return zi.value
-        return float(result)
