@@ -15,7 +15,7 @@ random.seed(0)
 class RRT:
 
     def __init__(self, bounds=Bounds([[5, 5], [5, 5], [5, 5]]),
-                 expandDis=1.0, goalSampleRate=10, maxIter=200, droneID=0):
+                 expandDis=1.0, goalSampleRate=10, maxIter=200, droneID=0, env=None):
 
         self.start = None
         self.goal = None
@@ -195,13 +195,16 @@ class RRT:
                 print('-----------------')
                 return path, path_distance
 
-    def sample(self):
-        if random.randint(0, 100) > self.goal_sample_rate:
+    def sample(self, mode="uniform"):
+        rnd = np.array(self.goal)
+        no_goal_sample = random.randint(0, 100) > self.goal_sample_rate
+        if mode=="uniform" and no_goal_sample:
             rnd = np.array([random.uniform(self.Bounds.xMin, self.Bounds.xMax) + self.Bounds.center[0],
                             random.uniform(self.Bounds.yMin, self.Bounds.yMax) + self.Bounds.center[1],
                             random.uniform(self.Bounds.zMin, self.Bounds.zMax) + self.Bounds.center[2]])
-        else:  # goal point sampling
-            rnd = np.array(self.goal)
+        elif mode=="special" and random.randint(0, 100):
+            vertices =
+
         return rnd
 
     def get_nearestNode_newNode(self, rnd):
