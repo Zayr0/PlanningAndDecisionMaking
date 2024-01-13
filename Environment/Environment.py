@@ -92,7 +92,7 @@ class Environment:
             stl_mesh.vectors[i] = vertex
 
         # Save the STL file
-        temp_stl_filename = "temp/temp_mesh_convex_hull" + str(time.time()) + ".stl"
+        temp_stl_filename = "../temp/temp_mesh_convex_hull" + str(time.time()) + ".stl"
         stl_mesh.save(temp_stl_filename)
 
         # Load the mesh using PyBullet
