@@ -18,9 +18,11 @@ class Environment:
         self.numObstacles = numObstacles
         self.obstacles = []
 
+        self.type = type
+
         if type == "Static":
             self.build_static_world()
-        elif type == "Dynamic":
+        elif (type == "Dynamic") or (type == "Dynamic2D"):
             self.build_dynamic_world()
 
     def build_dynamic_world(self):
@@ -46,7 +48,10 @@ class Environment:
                 left2Spawn -= 1
                 sphereID = p.loadURDF("Environment/VisualSphere.urdf", position[0], useMaximalCoordinates=False)
                 p.changeVisualShape(sphereID, -1, rgbaColor=[0, 0, 1, 0.9])
-                self.obstacles.append(MovingSpheres(ID=sphereID, radius=radius, position=position[0]))
+                if (self.type == "Dynamic"):
+                    self.obstacles.append(MovingSpheres(ID=sphereID, radius=radius, position=position[0]))
+                elif (self.type == "Dynamic2D"):
+                    self.obstacles.append(MovingSpheres(ID=sphereID, radius=radius, position=position[0], velocity='2D'))
 
     def build_static_world(self):
         self.Bounds.drawBounds()

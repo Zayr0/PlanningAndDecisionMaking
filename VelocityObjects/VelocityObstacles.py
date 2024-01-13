@@ -1,7 +1,9 @@
 import cvxpy as cp
 import numpy as np
 import pybullet as p
-from Sphere import Sphere
+from VelocityObjects.Sphere import Sphere
+from math import sqrt
+import matplotlib.pyplot as plt
 
 
 class VelocityObstacles:
@@ -11,6 +13,104 @@ class VelocityObstacles:
         self.tau = tau
         self.dt = dt
         self.numSamples = 100
+
+
+    def calcCircles(self, radius1, radius2, pos1, pos2, vel):
+        P1 = (pos2-pos1) + vel
+        P2 = (pos2-pos1)/self.tau + vel
+
+        R1 = (radius1+radius2)
+        R2 = R1/self.tau
+        return P1, P2, R1, R2
+
+    def calcLinConstraint2(self, Cx, Cy, r, Px, Py):
+        dx, dy = Px - Cx, Py - Cy
+        dxr, dyr = -dy, dx
+        d = sqrt(dx ** 2 + dy ** 2)
+        if d >= r:
+            rho = r / d
+            ad = rho ** 2
+            bd = rho * sqrt(1 - rho ** 2)
+            T1x = Cx + ad * dx + bd * dxr
+            T1y = Cy + ad * dy + bd * dyr
+            T2x = Cx + ad * dx - bd * dxr
+            T2y = Cy + ad * dy - bd * dyr
+
+            return (np.array([T1x, T1y]), np.array([T2x, T2y]), True)
+        else:
+            return (np.array([0, 0]), np.array([0, 0]), False)
+
+    # https://math.stackexchange.com/questions/543496/how-to-find-the-equation-of-a-line-tangent-to-a-circle-that-passes-through-a-g
+    def calcLinConstraint(self, Cx, Cy, r, Px, Py):
+        dx, dy = Px - Cx, Py - Cy
+        dxr, dyr = -dy, dx
+        d = sqrt(dx ** 2 + dy ** 2)
+        if d >= r:
+            rho = r / d
+            ad = rho ** 2
+            bd = rho * sqrt(1 - rho ** 2)
+            T1x = Cx + ad * dx + bd * dxr
+            T1y = Cy + ad * dy + bd * dyr
+            T2x = Cx + ad * dx - bd * dxr
+            T2y = Cy + ad * dy - bd * dyr
+
+            # print('The tangent points:')
+            # print('\tT1≡(%g,%g),  T2≡(%g,%g).' % (T1x, T1y, T2x, T2y))
+            if (d / r - 1) < 1E-8:
+                print('P is on the circumference')
+            else:
+                #y = ax+b
+                a1 = -(Py - T1y) / (T1x - Px)
+                b1 = -(T1y * Px - T1x * Py) / (T1x - Px)
+                a2 = -(Py - T2y) / (T2x - Px)
+                b2 = -(T2y * Px - T2x * Py) / (T2x - Px)
+
+
+                # print('The equations of the lines P-T1 and P-T2:')
+                # print('\t%+g·y%+g·x%+g = 0' % (T1x - Px, Py - T1y, T1y * Px - T1x * Py))
+                # print('\t%+g·y%+g·x%+g = 0' % (T2x - Px, Py - T2y, T2y * Px - T2x * Py))
+                return (a1, b1, a2, b2)
+        else:
+            #print('''Point P≡(%g,%g) is inside the circle with centre C≡(%g,%g) and radius r=%g. No tangent is possible...''' % (Px, Py, Cx, Cy, r))
+            print('tangent caculation failed')
+            return (0,0,0,0)
+
+
+    def detInputByMinimization2D(self, drone_pos, obstacles, plotConstraints=True):
+        radius = 1.0
+
+        for ob in obstacles:
+            p1, p2, r1, r2 = self.calcCircles(radius, ob.r, drone_pos, ob.p, ob.v)
+            point1, point2, succes = self.calcLinConstraint2(p1[0], p1[1], r1, ob.v[0], ob.v[1])
+
+
+            velpos = [ob.v[0] + ob.p[0], ob.v[1] + ob.p[1], ob.v[2] + ob.p[2]]
+
+            pC = [1, 1, 0]
+
+            if ob.pointID == 0:
+                ob.pointID = p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2)
+            else:
+                p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2, replaceItemUniqueId=ob.pointID)
+
+
+            # if ob.lineIDs[0] == 0:
+            #     ob.lineIDs[0] = p.addUserDebugLine(ob.p, velpos, lineColorRGB=[1, 1, 0])
+            # else:
+            #     p.addUserDebugLine(ob.p, velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[0])
+            #
+            # if succes:
+            #     if ob.lineIDs[1] == 0:
+            #         ob.lineIDs[1] = p.addUserDebugLine([point1[0], point1[1], ob.p[2]], velpos, lineColorRGB=[1, 1, 0])
+            #     else:
+            #         p.addUserDebugLine([point1[0], point1[1], ob.p[2]], velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[1])
+            #
+            #     if ob.lineIDs[2] == 0:
+            #         ob.lineIDs[2] = p.addUserDebugLine([point1[0], point1[1], ob.p[2]], velpos, lineColorRGB=[1, 1, 0])
+            #     else:
+            #         p.addUserDebugLine([point1[0], point1[1], ob.p[2]], velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[2])
+
+        return
 
 
     def calcVO3D(self, currentObstacle, movingObstacles):

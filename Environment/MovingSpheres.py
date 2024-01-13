@@ -2,16 +2,30 @@ import numpy as np
 import pybullet as pb
 
 class MovingSpheres:
-    def __init__(self, ID, radius=1.0, position=np.array([0.0, 0.0, 0.0]), velocity=np.array([None])):
+    def __init__(self, ID, radius=1.0, position=np.array([0.0, 0.0, 0.0]), velocity=None):
         self.ID = ID
+        self.lineIDs = [0, 0, 0]
+
+        self.pointID = 0
+        self.pointIDs = [0,0,0]
         self.r = radius
         self.p = position
-        maxVel = 1.0
-        self.v = np.random.uniform(low=[-maxVel, -maxVel, -maxVel], high=[maxVel, maxVel, maxVel], size=(3, ))
+        maxVel = 1.5
+
+        if (velocity == None):
+            self.v = np.random.uniform(low=[-maxVel, -maxVel, -maxVel], high=[maxVel, maxVel, maxVel], size=(3, ))
+        elif (velocity == '2D'):
+            self.v = np.random.uniform(low=[-maxVel, -maxVel, 0], high=[maxVel, maxVel, 0], size=(3, ))
+        else:
+            self.v = velocity
 
     #Update and move the sphere.
     def update(self, dt):
         self.p += self.v*dt
+        pb.resetBasePositionAndOrientation(self.ID, self.p, pb.getQuaternionFromEuler([0, 0, 0]))
+
+    def update2D(self, dt):
+        self.p += np.array([self.v[0], self.v[1], 0]) * dt
         pb.resetBasePositionAndOrientation(self.ID, self.p, pb.getQuaternionFromEuler([0, 0, 0]))
 
     def center_dist(self, position):

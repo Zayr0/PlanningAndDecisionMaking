@@ -12,6 +12,7 @@ from Helper.HullMaths import *
 import matplotlib.pyplot as plt
 import pybullet_data
 from Sampling.Sampler import Sampler
+from VelocityObjects.VelocityObstacles import VelocityObstacles
 
 
 #Setup pybullet simulation variables
@@ -31,14 +32,16 @@ pov = False
 
 
 # Initialize obstacle environments
-dynamicBounds = Bounds([[-5, 5], [-5, 5], [0, 0]], center=[0, 6, 5])
-dynamicEnv = Environment(numObstacles=10, type="Dynamic", bounds=dynamicBounds)
+dynamicBounds = Bounds([[-5, 5], [-5, 5], [0, 0]], center=[0, 0, 5])
+dynamicEnv = Environment(numObstacles=10, type="Dynamic2D", bounds=dynamicBounds)
 
 
 # Define start and goal for the drone
 
-start = [0, -20, 5]
-goal = [0, 0, 5]
+start = [0, -6, 5]
+goal = [0, 6, 5]
+
+p.addUserDebugLine(start, goal, lineColorRGB=[1, 1, 0], lineWidth=2)
 
 
 
@@ -61,26 +64,23 @@ for ob in dynamicEnv.obstacles:
     p.setCollisionFilterGroupMask(ob.ID, -1, collisionFilterGroup, collisionFilterMask)
     p.setCollisionFilterPair(droneID, ob.ID, -1, -1, enableCollision)
 
-
-
-# Setup for RRT - Generate global path
-
-
 N = 300
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
-x_ref = test_traj_wps(N, goal-start)
+x_ref = np.vstack((np.linspace(np.array(start), np.array(goal), N, axis=0).T, np.zeros((9, N))))
 
 x0 = np.array([start[0], start[1], start[2], 0, 0, 0, 0, 0, 0, 0, 0, 0])
 u0 = np.array([0, 0, 0, 0])
 x_bag[:, 0] = x0
 u_bag[:, 0] = u0
 
+tau = 3.0
 
 sampler = Sampler()
+VO = VelocityObstacles(tau, dt)
+
 
 # Start of simulation loop
-
-p_r = start
+desVel = np.zeros((3, N))
 
 for k in range(N - 1):
     drone_pos = x_bag[:3, k]
@@ -88,8 +88,13 @@ for k in range(N - 1):
     drone_att_quaternion = p.getQuaternionFromEuler(drone_att)
     p.resetBasePositionAndOrientation(droneID, drone_pos, drone_att_quaternion)
 
+
     p.stepSimulation()
     x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k])
+    desVel[:, k] = x_bag[6:9, k+1]
+
+    VO.detInputByMinimization2D(drone_pos, dynamicEnv.obstacles)
+
 
     time.sleep(dt)
 
