@@ -26,7 +26,7 @@ p.resetDebugVisualizerCamera(cameraDistance=20,
                                      cameraTargetPosition=[0, 0, 0])
 dt = 0.02
 pov = False
-sfp = False
+sfp = True
 
 
 
@@ -36,12 +36,12 @@ staticBounds = Bounds([[-5, 5], [-5, 5], [0, 10]], center=[0, -6, 0])
 staticEnv = Environment(type="Static", bounds=staticBounds)
 
 dynamicBounds = Bounds([[-5, 5], [-5, 5], [1, 10]], center=[0, 6, 0])
-dynamicEnv = Environment(numObstacles=90, type="Dynamic", bounds=dynamicBounds)
+dynamicEnv = Environment(numObstacles=5, type="Dynamic", bounds=dynamicBounds)
 
 
 # Define start and goal for the drone
 
-start = [0, -20, 5]
+start = [0, -13, 5]
 goal = [0, 0, 5]
 
 
@@ -82,6 +82,7 @@ path, path_distance = rrt.rrt_planning(start, goal)
 N = 300
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
 x_ref = test_traj_wps(N, np.array(path))
+#x_ref = min_snap(N, np.array(path))
 
 x0 = np.array([start[0], start[1], start[2], 0, 0, 0, 0, 0, 0, 0, 0, 0])
 u0 = np.array([0, 0, 0, 0])
@@ -96,13 +97,9 @@ for k in range(N - 1):
     drone_att = x_bag[3:6, k] * np.array([-1, 1, 1])
     drone_att_quaternion = p.getQuaternionFromEuler(drone_att)
 
-    if sfp and k%10 == 0:
+    if sfp and k%30 == 0:
         A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True)
-        print(vertices)
-        #p.addUserDebugPoints([entry.tolist() for entry in vertices], [[1, 1, 1] for _ in vertices], 30)
         sfp_id = draw_polytope2(vertices)
-        #time.sleep(0.5)
-        #p.removeBody(sfp_id)
 
     p.resetBasePositionAndOrientation(droneID, drone_pos, drone_att_quaternion)
     p.stepSimulation()

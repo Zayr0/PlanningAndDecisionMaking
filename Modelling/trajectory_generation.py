@@ -1,5 +1,5 @@
 import numpy as np
-
+from .mistgen.minimum_snap import mist_generator
 
 def test_traj(N):
     x_x_ref = 1 * np.cos(np.arange(N)/10)
@@ -29,4 +29,22 @@ def test_traj_wps(N, wps):
 
     x_ref = np.vstack((x_xyz_ref, np.zeros((9, N - n_recip))))
     x_ref = np.hstack((x_ref, np.repeat(x_ref[:, -1].reshape((12,1)), N-x_ref.shape[1], axis=1)))
+    return x_ref
+
+
+def min_snap(N, wps):
+    ax, ay, az = wps[:][0], wps[:][1], wps[:][2]
+    waypts_ori = np.array([ax, ay, az])
+
+    T = int(N/100)
+    v0 = np.array([0, 0, 0])
+    a0 = np.array([0, 0, 0])
+    ve = np.array([0, 0, 0])
+    ae = np.array([0, 0, 0])
+
+    myMistGen = mist_generator()
+    xxs, yys, zzs, tts = myMistGen.mist_3d_gen(waypts_ori, v0, a0, ve, ae, T)
+    vaj_xy = myMistGen.mist_3d_vaj_gen(xxs, yys, zzs, tts)
+    #myMistGen.mist_3d_vis(waypts_ori, xxs, yys, zzs, tts, vaj_xy, True, True, True)
+    x_ref = np.vstack([xxs, yys, zzs, np.zeros((9,xxs.shape[0]))])
     return x_ref
