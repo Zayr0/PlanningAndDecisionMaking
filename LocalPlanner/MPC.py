@@ -11,7 +11,7 @@ import cvxpy as cp
 from Planning.SafeFlightPolytope import *
 from Helper.HullMaths import *
 
-def mpc(drone, x0, x_goal, A_ineq, b_ineq, Q=np.eye(12), R=np.eye(4), N=100, render=True):
+def mpc(drone, x0, x_goal, A_ineq, b_ineq, Q=np.eye(12), R=np.eye(4), N=100, render=True, deltaB=None):
     x = cp.Variable((12, N))
     u = cp.Variable((4, N))
 
@@ -22,10 +22,15 @@ def mpc(drone, x0, x_goal, A_ineq, b_ineq, Q=np.eye(12), R=np.eye(4), N=100, ren
     for i in range(1, N):
         cons += [x[:, i] == drone.dsys.A @ x[:, i - 1] + drone.dsys.B @ u[:, i]]
 
+        if (deltaB!=None):
+            cons += [A_ineq @ x[0:3, i] <= b_ineq + deltaB * i]
+
     u_max = np.array([29.4, 1.4715, 1.4715, 0.0196])
     u_min = np.array([-9.8, -1.4715, -1.4715, -0.0196])
     cons += [u <= np.array([u_max]).T, u >= np.array([u_min]).T]
-    cons += [A_ineq @ x[0:3, :] <= b_ineq]
+
+    if deltaB==None:
+        cons += [A_ineq @ x[0:3, :] <= b_ineq]
 
     prob = cp.Problem(obj, cons)
     prob.solve(verbose=True)

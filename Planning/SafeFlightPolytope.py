@@ -79,3 +79,12 @@ def recalculation_point2(drone_pos, drone_radius, A_ineq, B_ineq):
 
     return zi.value
 
+
+def calculateDeltaB(A_ineq, obstacles, dt):
+    tNormal = -A_ineq
+
+    deltaB = []
+    for i, ob in enumerate(obstacles):
+        deltaB.append(dt * np.dot(ob.v, A_ineq[i, :]))
+
+    return deltaB
