@@ -97,8 +97,6 @@ sampler = Sampler()
 
 # Start of simulation loop
 
-p_r = start
-
 for k in range(N - 1):
     drone_pos = x_bag[:3, k]
     drone_att = x_bag[3:6, k] * np.array([-1, 1, 1])
@@ -108,10 +106,17 @@ for k in range(N - 1):
     prox_radius = 10.0
 
 
+
+
     if sfp and k%30==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
         #A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True)
         A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True, proximity_radius=prox_radius)
         sfp_id = draw_polytope2(vertices)
+
+        A_ineq, b_ineq = get_sfp(drone_pos, dynamicEnv, polytope_vertices=False, proximity_radius=prox_radius)
+        deltaB = calculateDeltaB(A_ineq, dynamicEnv.obstacles, dt)
+        print(deltaB)
+
 
     p.stepSimulation()
     x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k])
@@ -119,7 +124,8 @@ for k in range(N - 1):
     time.sleep(dt)
 
     for ob in dynamicEnv.obstacles:
-        ob.update(dt)
+        if k > 150:
+            ob.update(dt)
         contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)
         if len(contactPoints) > 0:
             print('Collision at: ', contactPoints, 'with object:', ob.ID)
