@@ -22,7 +22,7 @@ class Obstacle:
         constraints += [zj == zj_val]
 
         problem = cp.Problem(cp.Minimize(cost), constraints)
-        result = problem.solve(solver=cp.OSQP, verbose=False)
+        result = problem.solve() #solver=cp.OSQP, verbose=True
         if get_closest_point:
             return zi.value
         return float(result)
