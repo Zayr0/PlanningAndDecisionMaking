@@ -110,7 +110,7 @@ for k in range(N - 1):
 
 
 
-    if sfp and k%30==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
+    if sfp and k%20==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
         #A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True)
         A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True, proximity_radius=prox_radius)
         info_dict["A"] = A_ineq
