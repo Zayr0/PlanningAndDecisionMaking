@@ -203,7 +203,7 @@ class RRT:
                             random.uniform(self.Bounds.yMin, self.Bounds.yMax) + self.Bounds.center[1],
                             random.uniform(self.Bounds.zMin, self.Bounds.zMax) + self.Bounds.center[2]])
         elif mode=="special" and random.randint(0, 100):
-            vertices =
+            vertices = 0
 
         return rnd
 

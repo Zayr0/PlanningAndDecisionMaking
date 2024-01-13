@@ -83,7 +83,7 @@ path, path_distance = rrt.rrt_planning(start, goal)
 
 N = 300
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
-x_ref = min_snap(N, np.array(path))
+x_ref = min_snap(N, np.array(path)) # test_traj_wps(N, np.array(path)) #
 colors = [[1, 1, 0] for _ in range(x_ref.shape[1])]
 p.addUserDebugPoints([x_ref[:3, i] for i in range(x_ref.shape[1])], colors, pointSize=3)
 
@@ -91,6 +91,8 @@ x0 = np.array([start[0], start[1], start[2], 0, 0, 0, 0, 0, 0, 0, 0, 0])
 u0 = np.array([0, 0, 0, 0])
 x_bag[:, 0] = x0
 u_bag[:, 0] = u0
+
+info_dict = {} # dictionary for further information required by MPC
 
 
 sampler = Sampler()
@@ -111,6 +113,8 @@ for k in range(N - 1):
     if sfp and k%30==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
         #A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True)
         A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True, proximity_radius=prox_radius)
+        info_dict["A"] = A_ineq
+        info_dict["b"] = b_ineq
         sfp_id = draw_polytope2(vertices)
 
         A_ineq, b_ineq = get_sfp(drone_pos, dynamicEnv, polytope_vertices=False, proximity_radius=prox_radius)
@@ -119,8 +123,8 @@ for k in range(N - 1):
 
 
     p.stepSimulation()
-    x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k])
-
+    x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k], cont_type="MPC", info_dict=info_dict)
+    print("At k=",k," -> Next x_ref: ", x_ref[:3, k])
     time.sleep(dt)
 
     for ob in dynamicEnv.obstacles:
