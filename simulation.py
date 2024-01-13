@@ -113,6 +113,7 @@ for k in range(N - 1):
         A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True, proximity_radius=prox_radius)
         sfp_id = draw_polytope2(vertices)
 
+        A_ineq, b_ineq = get_sfp(drone_pos, dynamicEnv, polytope_vertices=False, proximity_radius=prox_radius)
         deltaB = calculateDeltaB(A_ineq, dynamicEnv.obstacles, dt)
         print(deltaB)
 
@@ -123,7 +124,8 @@ for k in range(N - 1):
     time.sleep(dt)
 
     for ob in dynamicEnv.obstacles:
-        ob.update(dt)
+        if k > 150:
+            ob.update(dt)
         contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)
         if len(contactPoints) > 0:
             print('Collision at: ', contactPoints, 'with object:', ob.ID)

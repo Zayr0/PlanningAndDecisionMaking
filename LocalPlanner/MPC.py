@@ -23,7 +23,7 @@ def mpc(drone, x0, x_goal, A_ineq, b_ineq, Q=np.eye(12), R=np.eye(4), N=100, ren
         cons += [x[:, i] == drone.dsys.A @ x[:, i - 1] + drone.dsys.B @ u[:, i]]
 
         if (deltaB!=None):
-            cons += [A_ineq @ x[0:3, i] <= b_ineq + deltaB * i]
+            cons += [A_ineq @ x[0:3, i] <= b_ineq + np.array(deltaB).T * i]
 
     u_max = np.array([29.4, 1.4715, 1.4715, 0.0196])
     u_min = np.array([-9.8, -1.4715, -1.4715, -0.0196])
