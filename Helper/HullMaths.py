@@ -51,7 +51,7 @@ def draw_polytope(points):
                                           vertices=vertices,
                                           indices=indices,
                                           meshScale=[1, 1, 1],
-                                          rgbaColor=[1, 0, 1, 0.5])  # Purple color, half-opacity
+                                          rgbaColor=[1, 0, 1, 0.1])  # Purple color, half-opacity
 
     # Create a multi-body with the visual shape
     body_id = p.createMultiBody(baseMass=0,
@@ -62,7 +62,7 @@ def draw_polytope(points):
 
 
 def draw_polytope2(points):
-    print(points)
+    #print(points)
     #hull = ConvexHull(points)
 
     # Get the convex hull vertices
@@ -90,5 +90,5 @@ def draw_polytope2(points):
         basePosition=[0, 0, 0],
         baseOrientation=initial_orientation,
     )
-    p.changeVisualShape(obstacle_body_id, -1, rgbaColor=[1, 0, 1, 0.5])  # red color
+    p.changeVisualShape(obstacle_body_id, -1, rgbaColor=[1, 0, 1, 0.1])  # red color
     return obstacle_body_id

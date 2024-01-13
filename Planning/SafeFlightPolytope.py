@@ -1,9 +1,11 @@
 import numpy as np
 from pypoman import compute_polytope_vertices
 from Helper.Bounds import Bounds
+import pybullet as p
+import cvxpy as cp
 
 
-def get_sfp(drone_pos, env, polytope_vertices=False, proximity_only=False):
+def get_sfp(drone_pos, env, polytope_vertices=False, proximity_radius=None):
     root = drone_pos
     closest_points = []
     A_ineq = np.array([[0, 0, -1],
@@ -20,8 +22,8 @@ def get_sfp(drone_pos, env, polytope_vertices=False, proximity_only=False):
                        [-env.Bounds.xMin - env.Bounds.center[0] + slack],
                        [env.Bounds.xMax + env.Bounds.center[0] + slack]])
     obs_near = []
-    if proximity_only:
-        obs_near = [obs for obs in env.obstacles if np.linalg.norm(obs.center - drone_pos)<=10]
+    if proximity_radius != None:
+        obs_near = [obs for obs in env.obstacles if np.linalg.norm(obs.center - drone_pos)<=proximity_radius]
     else:
         obs_near = env.obstacles
     for obs in obs_near:
@@ -36,4 +38,44 @@ def get_sfp(drone_pos, env, polytope_vertices=False, proximity_only=False):
         return A_ineq, b_ineq, vertices
     else:
         return A_ineq, b_ineq
+
+
+
+
+#This function is suppose to draw the distance from the drone to the next RRT node.
+#Its also suppose to calculate the last point within the object proximity scan radius,
+# before recalculation is needed.
+def recalculation_point(rrt_path, drone_pos, droneRadius, k, N, vertices, prox_radius, pos_last_calc):
+    n_links = np.array(rrt_path).shape[0]
+    nextPathPoint = np.asarray(rrt_path[int(n_links * k / N) + 1])
+    dist2NextNode = nextPathPoint - np.asarray(drone_pos)
+    p.addUserDebugLine(drone_pos, np.asarray(drone_pos) + dist2NextNode, [1, 0, 0], 4, replaceItemUniqueId=1)
+
+    bool = False
+    # if len(vertices) > 0:
+        #This checks if the next goal point is in the polytope
+        # bool = sampler.isInside(np.asarray(vertices), nextPathPoint)
+
+    # Distance to last point in proximity radius
+    recalPoint = pos_last_calc + dist2NextNode * (prox_radius-droneRadius)/prox_radius
+
+    dist2recalculate = np.linalg.norm(recalPoint - drone_pos)
+
+
+#This function is suppose to calculate the last point in the
+# convex safe flight polytope before recalculation is needed.
+def recalculation_point2(drone_pos, drone_radius, A_ineq, B_ineq):
+    zi = cp.Variable(3)
+    zj = cp.Variable(3)
+    epsilon = 0.1
+
+    cost = cp.quad_form(zi - zj - drone_radius - epsilon, np.eye(3))
+    constraints = []
+    constraints += [(A_ineq @ zi).reshape((6,1)) <= B_ineq]
+    constraints += [zj == drone_pos]
+
+    problem = cp.Problem(cp.Minimize(cost), constraints)
+    result = problem.solve(solver=cp.OSQP, verbose=False)
+
+    return zi.value
 
