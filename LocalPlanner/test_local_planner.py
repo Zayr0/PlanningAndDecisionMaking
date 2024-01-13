@@ -1,6 +1,6 @@
 import pybullet as p
-#from environment.world import build_world
-from environment.world import Environment
+#from Environment.world import build_world
+from Environment.Environment import Environment
 from Modelling.drone_dynamics import Quadrotor
 from Modelling.trajectory_generation import *
 import time
@@ -8,6 +8,9 @@ import numpy as np
 from Planning.RRT import RRT
 import matplotlib.pyplot as plt
 import cvxpy as cp
+from Planning.SafeFlightPolytope import *
+from Helper.HullMaths import *
+from MPC import mpc
 
 
 # connect
@@ -15,15 +18,18 @@ p.connect(p.GUI)
 p.setGravity(0, 0, -10)
 N = 300  # number of simulation steps
 
-# build the environment by loading obstacle .urdfs and obtaining their IDs
-env = Environment()
+# build the Environment by loading obstacle .urdfs and obtaining their IDs
+staticBounds = Bounds([[-5, 5], [-5, 5], [-5, 5]], center=[0, -6, 5])
+staticEnv = Environment(type="Static", bounds=staticBounds)
 start = [0, -10, 5]
 
 
 # load the drone and specify its dynamics
 # droneID = p.loadURDF("sphere2.urdf", start, p.getQuaternionFromEuler([0, 0, 0]))
 drone = Quadrotor()
-
+prox_radius = 10.0
+A_ineq, b_ineq, vertices = get_sfp(np.array(start), staticEnv, polytope_vertices=True, proximity_radius=prox_radius)
+sfp_id = draw_polytope2(vertices)
 goal = [1, -9, 6]
 start = [0, -10, 5]
 # p.removeUserDebugItem(droneID)
@@ -36,6 +42,9 @@ x_goal = np.array(goal + [0]*9)
 Q = np.eye(12)
 R = np.eye(4)
 N = 100
+
+u, x, point_id, line_id = \
+    mpc(drone, x0, x_goal, A_ineq, b_ineq, Q=np.eye(12), R=np.eye(4), N=100, render=True)
 
 x = cp.Variable((12, N))
 u = cp.Variable((4, N))
@@ -50,6 +59,7 @@ for i in range(1, N):
 u_max = np.array([29.4, 1.4715, 1.4715, 0.0196])
 u_min = np.array([-9.8, -1.4715, -1.4715, -0.0196])
 cons += [u <= np.array([u_max]).T, u >= np.array([u_min]).T]
+cons += [A_ineq@x[0:3, :] <= b_ineq]
 
 prob = cp.Problem(obj, cons)
 prob.solve(verbose=True)
