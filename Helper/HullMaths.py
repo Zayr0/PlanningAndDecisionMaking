@@ -51,7 +51,7 @@ def draw_polytope(points):
                                           vertices=vertices,
                                           indices=indices,
                                           meshScale=[1, 1, 1],
-                                          rgbaColor=[1, 0, 1, 0.5])  # Purple color, half-opacity
+                                          rgbaColor=[1, 0, 1, 0.1])  # Purple color, half-opacity
 
     # Create a multi-body with the visual shape
     body_id = p.createMultiBody(baseMass=0,

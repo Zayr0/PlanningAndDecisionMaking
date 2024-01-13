@@ -53,7 +53,7 @@ class RRT:
                 if self.is_near_goal(new_node):
                     if self.check_segment_collision(new_node, np.array(self.goal)):
                         if render:
-                            p.addUserDebugLine(new_node.tolist(), self.goal, [0, 1, 0], 3)
+                            p.addUserDebugLine(new_node.tolist(), self.goal, [0, 1, 0], 1)
                         path, path_distance = self.get_final_course()
 
                         return path, path_distance
