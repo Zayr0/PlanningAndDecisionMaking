@@ -6,6 +6,8 @@ class MovingSpheres:
         self.ID = ID
         self.lineIDs = [0, 0, 0]
 
+        self.drawGizmos = False
+
         self.pointID = 0
         self.pointIDs = [0,0,0]
         self.r = radius
@@ -19,10 +21,16 @@ class MovingSpheres:
         else:
             self.v = velocity
 
+    def drawVel(self):
+        pb.addUserDebugLine(self.p, self.p + self.v, [1, 0, 0])
+
     #Update and move the sphere.
     def update(self, dt):
         self.p += self.v*dt
         pb.resetBasePositionAndOrientation(self.ID, self.p, pb.getQuaternionFromEuler([0, 0, 0]))
+
+        if self.drawGizmos:
+            self.drawVel()
 
     def update2D(self, dt):
         self.p += np.array([self.v[0], self.v[1], 0]) * dt

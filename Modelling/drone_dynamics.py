@@ -152,11 +152,11 @@ class Quadrotor:
         # discrete step
         u = 0
         if cont_type == "LQR":
-            print("u is: ")
+            #print("u is: ")
             u = self.K @ (x_ref - x)
         elif cont_type == "MPC":
             A_ineq, b_ineq = info_dict["A"], info_dict["b"]
             u, _, _, _ = self.mpc(x, x_ref, A_ineq, b_ineq, Q=np.diag([1,1,1,0,0,0,0,0,0,0,0,0]), R=np.eye(4)*0.0001, N=10, render=False, deltaB=None)
         x_next = self.dsys.A @ x + self.dsys.B @ u
-        print(x_next)
+        #print(x_next)
         return x_next

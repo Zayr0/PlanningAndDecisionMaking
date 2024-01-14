@@ -32,8 +32,9 @@ pov = False
 
 
 # Initialize obstacle environments
-dynamicBounds = Bounds([[-5, 5], [-5, 5], [0, 0]], center=[0, 0, 5])
-dynamicEnv = Environment(numObstacles=10, type="Dynamic2D", bounds=dynamicBounds)
+size = 5
+dynamicBounds = Bounds([[-size, size], [-size, size], [0, 0]], center=[0, 0, 5])
+dynamicEnv = Environment(numObstacles=1, type="Dynamic2D", bounds=dynamicBounds)
 
 
 # Define start and goal for the drone
@@ -64,7 +65,7 @@ for ob in dynamicEnv.obstacles:
     p.setCollisionFilterGroupMask(ob.ID, -1, collisionFilterGroup, collisionFilterMask)
     p.setCollisionFilterPair(droneID, ob.ID, -1, -1, enableCollision)
 
-N = 300
+N = 100000
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
 x_ref = np.vstack((np.linspace(np.array(start), np.array(goal), N, axis=0).T, np.zeros((9, N))))
 
@@ -73,7 +74,7 @@ u0 = np.array([0, 0, 0, 0])
 x_bag[:, 0] = x0
 u_bag[:, 0] = u0
 
-tau = 3.0
+tau = 10.0
 
 sampler = Sampler()
 VO = VelocityObstacles(tau, dt)
@@ -86,20 +87,22 @@ for k in range(N - 1):
     drone_pos = x_bag[:3, k]
     drone_att = x_bag[3:6, k] * np.array([-1, 1, 1])
     drone_att_quaternion = p.getQuaternionFromEuler(drone_att)
-    p.resetBasePositionAndOrientation(droneID, drone_pos, drone_att_quaternion)
+    #p.resetBasePositionAndOrientation(droneID, drone_pos, drone_att_quaternion)
 
 
     p.stepSimulation()
     x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k])
     desVel[:, k] = x_bag[6:9, k+1]
 
-    VO.detInputByMinimization2D(drone_pos, dynamicEnv.obstacles)
+    pos, orn = p.getBasePositionAndOrientation(droneID)
+    VO.detInputBySampling2D(desVel[:, k], pos, dynamicEnv.obstacles, dynamicEnv.Bounds)
 
 
     time.sleep(dt)
 
     for ob in dynamicEnv.obstacles:
-        ob.update2D(dt)
+        #ob.update2D(dt)
+        ob.drawVel()
         contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)
         if len(contactPoints) > 0:
             print('Collision at: ', contactPoints, 'with object:', ob.ID)

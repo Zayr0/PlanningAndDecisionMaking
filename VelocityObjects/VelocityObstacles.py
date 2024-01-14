@@ -4,7 +4,8 @@ import pybullet as p
 from VelocityObjects.Sphere import Sphere
 from math import sqrt
 import matplotlib.pyplot as plt
-
+from mip import Model, xsum, maximize, BINARY
+from gekko import GEKKO
 
 class VelocityObstacles:
 
@@ -13,17 +14,19 @@ class VelocityObstacles:
         self.tau = tau
         self.dt = dt
         self.numSamples = 100
+        self.sampleID = 0
 
 
-    def calcCircles(self, radius1, radius2, pos1, pos2, vel):
-        P1 = (pos2-pos1) + vel
-        P2 = (pos2-pos1)/self.tau + vel
+    def calcCircles(self, ob, drone_pos, radius):
+        epsilon = 0.001
+        P1 = (ob.p-drone_pos)/epsilon + ob.v
+        P2 = (ob.p-drone_pos)/self.tau + ob.v
 
-        R1 = (radius1+radius2)
-        R2 = R1/self.tau
+        R1 = (ob.r+radius)/epsilon
+        R2 = (ob.r+radius)/self.tau
         return P1, P2, R1, R2
 
-    def calcLinConstraint2(self, Cx, Cy, r, Px, Py):
+    def calcLinConstraint2(self, Cx, Cy, r, Px, Py, velPos):
         dx, dy = Px - Cx, Py - Cy
         dxr, dyr = -dy, dx
         d = sqrt(dx ** 2 + dy ** 2)
@@ -36,9 +39,14 @@ class VelocityObstacles:
             T2x = Cx + ad * dx - bd * dxr
             T2y = Cy + ad * dy - bd * dyr
 
-            return (np.array([T1x, T1y]), np.array([T2x, T2y]), True)
+            a1 = -(velPos[1] - T1y) / (T1x - velPos[0])
+            b1 = -(T1y * velPos[0] - T1x * velPos[1]) / (T1x - velPos[0])
+            a2 = -(velPos[1] - T2y) / (T2x - velPos[0])
+            b2 = -(T2y * velPos[0] - T2x * velPos[1]) / (T2x - velPos[0])
+
+            return (np.array([T1x, T1y]), np.array([T2x, T2y]), [a1, b1, a2, b2], True)
         else:
-            return (np.array([0, 0]), np.array([0, 0]), False)
+            return (np.array([0, 0]), np.array([0, 0]), [0, 0, 0, 0], False)
 
     # https://math.stackexchange.com/questions/543496/how-to-find-the-equation-of-a-line-tangent-to-a-circle-that-passes-through-a-g
     def calcLinConstraint(self, Cx, Cy, r, Px, Py):
@@ -76,40 +84,122 @@ class VelocityObstacles:
             return (0,0,0,0)
 
 
-    def detInputByMinimization2D(self, drone_pos, obstacles, plotConstraints=True):
+    def detInputBySampling2D(self, desVel, drone_pos, obstacles, envBounds, plotConstraints=True, numSamples=1000):
+        radius = 1.0
+
+
+        vx = np.random.uniform(envBounds.xMin, envBounds.xMax, numSamples)
+        vy = np.random.uniform(envBounds.yMin, envBounds.yMax, numSamples)
+        V = np.vstack((vx, vy)).T
+
+
+        for ob in obstacles:
+            velpos = np.array(ob.p) + np.array(ob.v)
+            p1, p2, r1, r2 = self.calcCircles(ob, drone_pos, radius)
+            point1, point2, [a1, b1, a2, b2], succes = self.calcLinConstraint2(p1[0], p1[1], r1, ob.v[0], ob.v[1], velpos)
+
+            print(p2)
+
+
+
+            #A_ineq, b_ineq = self.generateConstraints2D(velpos[1:2], point1, point2)
+
+            if plotConstraints:
+                extVal = 1
+                point1 = np.hstack((extVal * (point1-velpos[1:2]), ob.p[2]))
+                point2 = np.hstack((extVal * (point2-velpos[1:2]), ob.p[2]))
+
+                pC = [0, 0, 1]
+
+                if ob.pointID == 0:
+                    ob.pointID = p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2)
+                else:
+                    p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2, replaceItemUniqueId=ob.pointID)
+
+
+                if succes:
+                    if ob.lineIDs[1] == 0:
+                        ob.lineIDs[1] = p.addUserDebugLine(point1, velpos, lineColorRGB=[1, 1, 0])
+                    else:
+                        p.addUserDebugLine(point1, velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[1])
+
+                    if ob.lineIDs[2] == 0:
+                        ob.lineIDs[2] = p.addUserDebugLine(point2, velpos, lineColorRGB=[1, 1, 0])
+                    else:
+                        p.addUserDebugLine(point2, velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[2])
+
+            acceptedV = []
+            if succes:
+                for i, po in enumerate(V):
+                    # if ( (a1 * p2[0] + b1 - p2[1]) >= 0) or ((a2 * p2[0] + b2 - p2[1]) <= 0):
+                    if ((a1*po[0] + b1 - po[1]) >= 0) or ((a2*po[0] + b2 - po[1]) <= 0):
+                        acceptedV.append([po[0], po[1], velpos[2]])
+            V = np.asarray(acceptedV)
+
+
+
+        colors = np.tile(np.array([0, 1, 0]), (len(V), 1))
+        if len(V) > 0:
+            if self.sampleID == 0:
+                self.sampleID = p.addUserDebugPoints(V, colors, pointSize=2)
+            else:
+                p.addUserDebugPoints(V, colors, pointSize=2, replaceItemUniqueId=self.sampleID)
+        return
+
+    def detInputByMinimization2D(self, desVel, drone_pos, obstacles, plotConstraints=True):
         radius = 1.0
 
         for ob in obstacles:
-            p1, p2, r1, r2 = self.calcCircles(radius, ob.r, drone_pos, ob.p, ob.v)
-            point1, point2, succes = self.calcLinConstraint2(p1[0], p1[1], r1, ob.v[0], ob.v[1])
+            p1, p2, r1, r2 = self.calcCircles(ob, drone_pos, radius)
+            point1, point2, [a1, b1, a2, b2], succes = self.calcLinConstraint2(p1[0], p1[1], r1, ob.v[0], ob.v[1])
+
+            velpos = np.array(ob.p) + np.array(ob.v)
+
+            #A_ineq, b_ineq = self.generateConstraints2D(velpos[1:2], point1, point2)
+
+            if plotConstraints:
+                extVal = 1
+                point1 = np.hstack((extVal * (point1-velpos[1:2]), ob.p[2]))
+                point2 = np.hstack((extVal * (point2-velpos[1:2]), ob.p[2]))
+
+                pC = [0, 0, 1]
+
+                if ob.pointID == 0:
+                    ob.pointID = p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2)
+                else:
+                    p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2, replaceItemUniqueId=ob.pointID)
 
 
-            velpos = [ob.v[0] + ob.p[0], ob.v[1] + ob.p[1], ob.v[2] + ob.p[2]]
+                if succes:
+                    if ob.lineIDs[1] == 0:
+                        ob.lineIDs[1] = p.addUserDebugLine(point1, velpos, lineColorRGB=[1, 1, 0])
+                    else:
+                        p.addUserDebugLine(point1, velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[1])
 
-            pC = [1, 1, 0]
+                    if ob.lineIDs[2] == 0:
+                        ob.lineIDs[2] = p.addUserDebugLine(point2, velpos, lineColorRGB=[1, 1, 0])
+                    else:
+                        p.addUserDebugLine(point2, velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[2])
 
-            if ob.pointID == 0:
-                ob.pointID = p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2)
-            else:
-                p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2, replaceItemUniqueId=ob.pointID)
+            if succes:
+                nObs = len(obstacles)
 
+                vxref = desVel[0]*np.ones((nObs, 1))
+                vyref = desVel[1] * np.ones((nObs, 1))
 
-            # if ob.lineIDs[0] == 0:
-            #     ob.lineIDs[0] = p.addUserDebugLine(ob.p, velpos, lineColorRGB=[1, 1, 0])
-            # else:
-            #     p.addUserDebugLine(ob.p, velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[0])
-            #
-            # if succes:
-            #     if ob.lineIDs[1] == 0:
-            #         ob.lineIDs[1] = p.addUserDebugLine([point1[0], point1[1], ob.p[2]], velpos, lineColorRGB=[1, 1, 0])
-            #     else:
-            #         p.addUserDebugLine([point1[0], point1[1], ob.p[2]], velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[1])
-            #
-            #     if ob.lineIDs[2] == 0:
-            #         ob.lineIDs[2] = p.addUserDebugLine([point1[0], point1[1], ob.p[2]], velpos, lineColorRGB=[1, 1, 0])
-            #     else:
-            #         p.addUserDebugLine([point1[0], point1[1], ob.p[2]], velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[2])
+                P = np.eye(nObs)
 
+                m = GEKKO()
+
+                vx = [m.add_var() for i in range(nObs)]
+                vy = [m.add_var() for i in range(nObs)]
+                d = m.add_var(var_type=BINARY)
+
+                m.objective = maximize(-xsum((vx[i]-vxref[i])^2 - (vy[i]-vyref[i])^2) for i in range(nObs))
+                m += d * (vy - a1 * vx - b1) >= 0
+                m += (1-d) * (vy - a2 * vx - b2) <= 0
+
+                m.optimize()
         return
 
 
