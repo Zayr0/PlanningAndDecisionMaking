@@ -117,11 +117,11 @@ class Quadrotor:
         cost += cp.quad_form(x[:3,N-1] - x_goal[:3], np.eye(3))
         obj = cp.Minimize(cost)
 
-        cons = [x[:, 0] == self.dsys.A @ x0 + self.dsys.B @ u[:, 0]]
-        #cons = [x[:, 0] == x0]
+        #cons = [x[:, 0] == self.dsys.A @ x0 + self.dsys.B @ u[:, 0]]
+        cons = [x[:, 0] == x0]
         #cons += [x[:3,N-1] == x_goal[:3]]
         for i in range(1, N):
-            cons += [x[:, i] == self.dsys.A @ x[:, i - 1] + self.dsys.B @ u[:, i]]
+            cons += [x[:, i] == self.dsys.A @ x[:, i - 1] + self.dsys.B @ u[:, i-1]]
             #cons += [x[2, i]==x0[2]]
 
             if deltaB is not None:

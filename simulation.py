@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import pybullet_data
 from Sampling.Sampler import Sampler
 
+#time.sleep(10)
 
 #Setup pybullet simulation variables
 
@@ -33,7 +34,7 @@ static_active = False
 env_bugtrap = True
 env_dynamic = True
 dynamic_active = False
-
+np.random.seed(10)
 
 # Define start and goal for the drone
 start = [0, -13, 5]
@@ -99,10 +100,6 @@ if static_active:
             info_dict["A"] = A_ineq
             info_dict["b"] = b_ineq
             sfp_id = draw_polytope2(vertices)
-
-            A_ineq, b_ineq = get_sfp(drone_pos, dynamicEnv, polytope_vertices=False, proximity_radius=prox_radius)
-            deltaB = calculateDeltaB(A_ineq, dynamicEnv.obstacles, dt)
-
 
         p.stepSimulation()
         x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k], cont_type="MPC", info_dict=info_dict)
@@ -172,7 +169,6 @@ if dynamic_active:
         #x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k], cont_type="MPC", info_dict=info_dict)
         x_bag[:, k + 1] = drone.step(x_bag[:, k], x_ref[:,-1], cont_type="MPC", info_dict=info_dict)
         time.sleep(dt)
-        time.sleep(0.1)
         for ob in dynamicEnv.obstacles:
             ob.update(dt)
             contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)
