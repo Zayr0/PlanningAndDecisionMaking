@@ -26,7 +26,8 @@ p.resetDebugVisualizerCamera(cameraDistance=20,
                                      cameraYaw=90,
                                      cameraPitch=-89,
                                      cameraTargetPosition=[0, 0, 0])
-dt = 0.02
+dt = 0.1
+sleeptime = 0.02
 pov = False
 sfp = True
 env_static = True
@@ -121,7 +122,7 @@ if static_active:
             p.removeUserDebugItem(goal_id)
         goal_id = p.addUserDebugPoints([x_ref[0:3, k].tolist()], [[1, 0, 0]], 10)
         x_bag[:, k+1],point_id, line_id = drone.step(x_bag[:, k], x_ref[:, k], cont_type="MPC", info_dict=info_dict)
-        time.sleep(dt)
+        time.sleep(sleeptime)
 
         if pov:
             camera_target_position = x_bag[:3, k]
@@ -191,7 +192,7 @@ if dynamic_active:
             for i in line_id:
                 p.removeUserDebugItem(i)
         x_bag[:, k + 1], point_id, line_id= drone.step(x_bag[:, k], x_ref[:,-1], cont_type="MPC", info_dict=info_dict, dynamic=True)
-        time.sleep(dt)
+        time.sleep(sleeptime)
         for ob in dynamicEnv.obstacles:
             ob.update(dt)
             contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)
