@@ -52,7 +52,7 @@ if env_static:
 
 if env_dynamic:
     dynamicBounds = Bounds([[-5, 5], [-5, 5], [4, 6]], center=[0, 6, 0])
-    dynamicEnv = Environment(numObstacles=5, type="Dynamic", bounds=dynamicBounds)
+    dynamicEnv = Environment(numObstacles=7, type="Dynamic", bounds=dynamicBounds)
 
     # Setup collisions for moving obstacles
     collisionFilterGroup = 0
@@ -83,7 +83,7 @@ if static_active:
     x_bag[:, 0] = x0
     u_bag[:, 0] = u0
 
-    info_dict = {}  # dictionary for further information required by MPC
+    info_dict = {"deltaB": None}  # dictionary for further information required by MPC
 
     for k in range(N - 1):
         drone_pos = x_bag[:3, k]
@@ -102,7 +102,6 @@ if static_active:
 
             A_ineq, b_ineq = get_sfp(drone_pos, dynamicEnv, polytope_vertices=False, proximity_radius=prox_radius)
             deltaB = calculateDeltaB(A_ineq, dynamicEnv.obstacles, dt)
-            print(deltaB)
 
 
         p.stepSimulation()
@@ -146,6 +145,7 @@ if dynamic_active:
     u_bag[:, 0] = u0
 
     info_dict = {}  # dictionary for further information required by MPC
+    sfp_id = None
     for k in range(N - 1):
         drone_pos = x_bag[:3, k]
         drone_att = x_bag[3:6, k] * np.array([-1, 1, 1])
@@ -154,11 +154,13 @@ if dynamic_active:
 
         prox_radius = 100.0
 
-        if sfp and k%5==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
+        if sfp and k%1==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
             #A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True)
             A_ineq, b_ineq, vertices = get_sfp(drone_pos, dynamicEnv, polytope_vertices=True, proximity_radius=prox_radius)
             info_dict["A"] = A_ineq
             info_dict["b"] = b_ineq
+            if sfp_id:
+                p.removeBody(sfp_id)
             sfp_id = draw_polytope2(vertices)
 
             A_ineq, b_ineq = get_sfp(drone_pos, dynamicEnv, polytope_vertices=False, proximity_radius=prox_radius)
@@ -170,7 +172,7 @@ if dynamic_active:
         #x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k], cont_type="MPC", info_dict=info_dict)
         x_bag[:, k + 1] = drone.step(x_bag[:, k], x_ref[:,-1], cont_type="MPC", info_dict=info_dict)
         time.sleep(dt)
-
+        time.sleep(0.1)
         for ob in dynamicEnv.obstacles:
             ob.update(dt)
             contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)
@@ -180,7 +182,7 @@ if dynamic_active:
 
         if pov:
             camera_target_position = x_bag[:3, k]
-            camera_distance = 10
+            camera_distance = 3
             camera_yaw = x_bag[4, k]
             camera_pitch = x_bag[3,k]
             p.resetDebugVisualizerCamera(cameraDistance=camera_distance,

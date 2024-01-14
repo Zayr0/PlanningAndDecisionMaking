@@ -158,6 +158,6 @@ class Quadrotor:
             u = self.K @ (x_ref - x)
         elif cont_type == "MPC":
             A_ineq, b_ineq = info_dict["A"], info_dict["b"]
-            u, _, _, _ = self.mpc(x, x_ref, A_ineq, b_ineq, Q=np.diag([1,1,1,0,0,0,0,0,0,0,0,0]), R=np.eye(4), N=30, render=False)
+            u, _, _, _ = self.mpc(x, x_ref, A_ineq, b_ineq, Q=np.diag([1,1,1,0,0,0,0,0,0,0,0,0]), R=np.eye(4), N=10, render=False, deltaB=info_dict["deltaB"])
         x_next = self.dsys.A @ x + self.dsys.B @ u
         return x_next
