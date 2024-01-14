@@ -117,7 +117,7 @@ class Quadrotor:
         obj = cp.Minimize(sum(cp.quad_form(x[:, i] - x_goal.T, Q) + cp.quad_form(u[:, i], R) for i in range(N)))
 
         cons = [x[:, 0] == self.dsys.A @ x0 + self.dsys.B @ u[:, 0]]
-        cons += [x[:,N-1] == x_goal]
+        cons += [x[:3,N-1] == x_goal[:3]]
         for i in range(1, N):
             cons += [x[:, i] == self.dsys.A @ x[:, i - 1] + self.dsys.B @ u[:, i]]
 
@@ -156,7 +156,6 @@ class Quadrotor:
             u = self.K @ (x_ref - x)
         elif cont_type == "MPC":
             A_ineq, b_ineq = info_dict["A"], info_dict["b"]
-            p.addUserDebugPoints([x_ref[:3]],[[1,0,0]], 20)
             u, _, _, _ = self.mpc(x, x_ref, A_ineq, b_ineq, Q=np.diag([1,1,1,0,0,0,0,0,0,0,0,0]), R=np.eye(4)*0.0001, N=10, render=False, deltaB=None)
         x_next = self.dsys.A @ x + self.dsys.B @ u
         print(x_next)

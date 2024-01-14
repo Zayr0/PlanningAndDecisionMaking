@@ -29,6 +29,7 @@ class RRT:
         self.parents_of_goal = []
 
         self.droneID = droneID
+        self.env = env
 
     def rrt_planning(self, start, goal, render=True):
         self.start = start
@@ -202,8 +203,8 @@ class RRT:
             rnd = np.array([random.uniform(self.Bounds.xMin, self.Bounds.xMax) + self.Bounds.center[0],
                             random.uniform(self.Bounds.yMin, self.Bounds.yMax) + self.Bounds.center[1],
                             random.uniform(self.Bounds.zMin, self.Bounds.zMax) + self.Bounds.center[2]])
-        elif mode=="special" and random.randint(0, 100):
-            vertices = 0
+        elif mode=="special" and no_goal_sample:
+            vertices = self.env.obstacles
 
         return rnd
 
