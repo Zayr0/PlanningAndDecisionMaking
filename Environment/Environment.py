@@ -17,6 +17,7 @@ class Environment:
 
         self.numObstacles = numObstacles
         self.obstacles = []
+        self.type = type
 
         self.type = type
 
@@ -114,6 +115,8 @@ class Environment:
         )
         p.changeVisualShape(obstacle_body_id, -1, rgbaColor=[1, 0, 0, 1])  # red color
         obs1 = Obstacle(obstacle_body_id)
+        obs1.center = initial_pose
+        obs1.vertices = hull
         A, b = hull.equations[:, :-1], -1 * hull.equations[:,-1]
         obs1.constr_mat_A, obs1.constr_mat_b = remove_duplicate_inequalities(A, b)
         self.obstacles.append(obs1)

@@ -62,25 +62,8 @@ def draw_polytope(points):
 
 
 def draw_polytope2(points):
-    #print(points)
-    #hull = ConvexHull(points)
-
-    # Get the convex hull vertices
-    hull_vertices = points #points[hull.vertices]
-    # Create an STL mesh from the convex hull vertices
-    #stl_mesh = mesh.Mesh(np.zeros(hull_vertices.shape[0], dtype=mesh.Mesh.dtype))
-    stl_mesh = mesh.Mesh(np.zeros(len(hull_vertices), dtype=mesh.Mesh.dtype))
-
-    for i, vertex in enumerate(hull_vertices):
-        stl_mesh.vectors[i] = vertex
-
-    # Save the STL file
-    temp_stl_filename = "temp/temp_mesh_convex_hull" + str(time.time()) + ".stl"
-    stl_mesh.save(temp_stl_filename)
-
     # Load the mesh using PyBullet
-    mesh_collision = p.createCollisionShape(p.GEOM_MESH, fileName=temp_stl_filename)
-    os.remove(temp_stl_filename)
+    mesh_collision = p.createCollisionShape(p.GEOM_MESH, vertices=points, meshScale=[1, 1, 1])
     initial_orientation = p.getQuaternionFromEuler([0, 0, 0])  # orientation as quaternion
 
     # Create a multi-body with the collision shape
@@ -90,5 +73,5 @@ def draw_polytope2(points):
         basePosition=[0, 0, 0],
         baseOrientation=initial_orientation,
     )
-    p.changeVisualShape(obstacle_body_id, -1, rgbaColor=[1, 0, 1, 0.1])  # red color
+    p.changeVisualShape(obstacle_body_id, -1, rgbaColor=[1, 0, 1, 0.5])  # red color
     return obstacle_body_id

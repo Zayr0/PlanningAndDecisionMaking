@@ -23,7 +23,10 @@ def get_sfp(drone_pos, env, polytope_vertices=False, proximity_radius=None):
                        [env.Bounds.xMax + env.Bounds.center[0] + slack]])
     obs_near = []
     if proximity_radius != None:
-        obs_near = [obs for obs in env.obstacles if np.linalg.norm(obs.center - drone_pos)<=proximity_radius]
+        if env.type == "Static":
+            obs_near = [obs for obs in env.obstacles if np.linalg.norm(obs.center - drone_pos)<=proximity_radius]
+        elif env.type == "Dynamic":
+            obs_near = [obs for obs in env.obstacles if np.linalg.norm(obs.p - drone_pos) <= proximity_radius]
     else:
         obs_near = env.obstacles
     for obs in obs_near:
@@ -79,3 +82,12 @@ def recalculation_point2(drone_pos, drone_radius, A_ineq, B_ineq):
 
     return zi.value
 
+
+def calculateDeltaB(A_ineq, obstacles, dt):
+    tNormal = -A_ineq
+
+    deltaB = []
+    for i, ob in enumerate(obstacles):
+        deltaB.append(dt * np.dot(ob.v, A_ineq[i, :]))
+
+    return deltaB

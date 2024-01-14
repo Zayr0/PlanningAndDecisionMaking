@@ -1,4 +1,7 @@
 import numpy as np
+from .mistgen.minimum_snap import mist_generator
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
 
 
 def test_traj(N):
@@ -29,4 +32,23 @@ def test_traj_wps(N, wps):
 
     x_ref = np.vstack((x_xyz_ref, np.zeros((9, N - n_recip))))
     x_ref = np.hstack((x_ref, np.repeat(x_ref[:, -1].reshape((12,1)), N-x_ref.shape[1], axis=1)))
+    return x_ref
+
+
+def min_snap(N, wps):
+    ax, ay, az = wps[:,0], wps[:,1], wps[:,2]
+    waypts_ori = np.array([ax, ay, az])
+
+    T = int(N/100)
+    v0 = np.array([0, 0, 0])
+    a0 = np.array([0, 0, 0])
+    ve = np.array([0, 0, 0])
+    ae = np.array([0, 0, 0])
+
+    myMistGen = mist_generator()
+    xxs, yys, zzs, tts = myMistGen.mist_3d_gen(waypts_ori, v0, a0, ve, ae, T)
+    vxx, _, _, vyy, _, _, vzz, _, _ = myMistGen.mist_3d_vaj_gen(xxs, yys, zzs, tts)
+    yaw, _ = myMistGen.calc_yaw(vyy, vxx) # yaw in radians
+    x_ref = np.vstack([xxs, yys, zzs, np.zeros((2, xxs.shape[0])), yaw, np.zeros((6, xxs.shape[0]))]) # zero ref velocities
+    #x_ref = np.vstack([xxs, yys, zzs, np.zeros((2, xxs.shape[0])), yaw, vxx, vyy, vzz, np.zeros((3, xxs.shape[0]))])
     return x_ref

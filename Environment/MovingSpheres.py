@@ -32,7 +32,9 @@ class MovingSpheres:
         return np.linalg.norm(position - self.p)
 
     #This function returns the smallest distance from a position to the surface of the sphere.
-    def min_dist(self, position):
+    def min_dist(self, position, get_closest_point=True):
+        if get_closest_point:
+            return self.closest_point_on_surface(position)
         return np.linalg.norm(position-self.p)-self.r
 
     #This function returns the closest point on the surface to another position

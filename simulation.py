@@ -36,13 +36,13 @@ sfp = True
 staticBounds = Bounds([[-5, 5], [-5, 5], [-5, 5]], center=[0, -6, 5])
 staticEnv = Environment(type="Static", bounds=staticBounds)
 
-dynamicBounds = Bounds([[-5, 5], [-5, 5], [-4, 5]], center=[0, 6, 5])
-dynamicEnv = Environment(numObstacles=10, type="Dynamic", bounds=dynamicBounds)
+dynamicBounds = Bounds([[-5, 5], [-5, 5], [1, 10]], center=[0, 6, 0])
+dynamicEnv = Environment(numObstacles=5, type="Dynamic", bounds=dynamicBounds)
 
 
 # Define start and goal for the drone
 
-start = [0, -20, 5]
+start = [0, -13, 5]
 goal = [0, 0, 5]
 
 
@@ -83,19 +83,21 @@ path, path_distance = rrt.rrt_planning(start, goal)
 
 N = 300
 x_bag, u_bag = drone.get_ss_bag_vectors(N)  # arrays to bag the historical data of the states and inputs
-x_ref = test_traj_wps(N, np.array(path))
+x_ref = min_snap(N, np.array(path)) # test_traj_wps(N, np.array(path)) #
+colors = [[1, 1, 0] for _ in range(x_ref.shape[1])]
+p.addUserDebugPoints([x_ref[:3, i] for i in range(x_ref.shape[1])], colors, pointSize=3)
 
 x0 = np.array([start[0], start[1], start[2], 0, 0, 0, 0, 0, 0, 0, 0, 0])
 u0 = np.array([0, 0, 0, 0])
 x_bag[:, 0] = x0
 u_bag[:, 0] = u0
 
+info_dict = {} # dictionary for further information required by MPC
+
 
 sampler = Sampler()
 
 # Start of simulation loop
-
-p_r = start
 
 for k in range(N - 1):
     drone_pos = x_bag[:3, k]
@@ -106,27 +108,28 @@ for k in range(N - 1):
     prox_radius = 10.0
 
 
-    if sfp and k%30==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
 
+
+    if sfp and k%20==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
+        #A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True)
         A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True, proximity_radius=prox_radius)
-        #A_ineq, b_ineq = get_sfp(drone_pos, staticEnv)
-        #print(vertices)
-        #p.addUserDebugPoints([entry.tolist() for entry in vertices], [[1, 1, 1] for _ in vertices], 30)
+        info_dict["A"] = A_ineq
+        info_dict["b"] = b_ineq
         sfp_id = draw_polytope2(vertices)
-        # pos_last_calc = drone_pos
-        # p_r = recalculation_point2(drone_pos, droneRadius, A_ineq, b_ineq)
-        #p.addUserDebugPoints([p_r], [[1, 1, 0]], pointSize=4)
-        #time.sleep(0.5)
-        #p.removeBody(sfp_id)
+
+        A_ineq, b_ineq = get_sfp(drone_pos, dynamicEnv, polytope_vertices=False, proximity_radius=prox_radius)
+        deltaB = calculateDeltaB(A_ineq, dynamicEnv.obstacles, dt)
+        print(deltaB)
 
 
     p.stepSimulation()
-    x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k])
-
+    x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k], cont_type="MPC", info_dict=info_dict)
+    print("At k=",k," -> Next x_ref: ", x_ref[:3, k])
     time.sleep(dt)
 
     for ob in dynamicEnv.obstacles:
-        ob.update(dt)
+        if k > 150:
+            ob.update(dt)
         contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)
         if len(contactPoints) > 0:
             print('Collision at: ', contactPoints, 'with object:', ob.ID)
