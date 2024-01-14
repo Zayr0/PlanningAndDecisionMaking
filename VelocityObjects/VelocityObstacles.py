@@ -16,6 +16,8 @@ class VelocityObstacles:
         self.numSamples = 100
         self.sampleID = 0
 
+        self.drawDroneGizmosIDs = [0, 0]
+
 
     def calcCircles(self, ob, drone_pos, radius):
         epsilon = 0.001
@@ -87,7 +89,6 @@ class VelocityObstacles:
     def detInputBySampling2D(self, desVel, drone_pos, obstacles, envBounds, plotConstraints=True, numSamples=1000):
         radius = 1.0
 
-
         vx = np.random.uniform(envBounds.xMin, envBounds.xMax, numSamples)
         vy = np.random.uniform(envBounds.yMin, envBounds.yMax, numSamples)
         V = np.vstack((vx, vy)).T
@@ -98,36 +99,6 @@ class VelocityObstacles:
             p1, p2, r1, r2 = self.calcCircles(ob, drone_pos, radius)
             point1, point2, [a1, b1, a2, b2], succes = self.calcLinConstraint2(p1[0], p1[1], r1, ob.v[0], ob.v[1], velpos)
 
-            print(p2)
-
-
-
-            #A_ineq, b_ineq = self.generateConstraints2D(velpos[1:2], point1, point2)
-
-            if plotConstraints:
-                extVal = 1
-                point1 = np.hstack((extVal * (point1-velpos[1:2]), ob.p[2]))
-                point2 = np.hstack((extVal * (point2-velpos[1:2]), ob.p[2]))
-
-                pC = [0, 0, 1]
-
-                if ob.pointID == 0:
-                    ob.pointID = p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2)
-                else:
-                    p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2, replaceItemUniqueId=ob.pointID)
-
-
-                if succes:
-                    if ob.lineIDs[1] == 0:
-                        ob.lineIDs[1] = p.addUserDebugLine(point1, velpos, lineColorRGB=[1, 1, 0])
-                    else:
-                        p.addUserDebugLine(point1, velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[1])
-
-                    if ob.lineIDs[2] == 0:
-                        ob.lineIDs[2] = p.addUserDebugLine(point2, velpos, lineColorRGB=[1, 1, 0])
-                    else:
-                        p.addUserDebugLine(point2, velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[2])
-
             acceptedV = []
             if succes:
                 for i, po in enumerate(V):
@@ -136,15 +107,52 @@ class VelocityObstacles:
                         acceptedV.append([po[0], po[1], velpos[2]])
             V = np.asarray(acceptedV)
 
+        newVel = np.min(V - desVel*np.ones(V.shape))
 
-
-        colors = np.tile(np.array([0, 1, 0]), (len(V), 1))
-        if len(V) > 0:
-            if self.sampleID == 0:
-                self.sampleID = p.addUserDebugPoints(V, colors, pointSize=2)
+        if plotConstraints:
+            if self.drawDroneGizmosIDs[0] == 0:
+                self.drawDroneGizmosIDs[0] = p.addUserDebugLine(drone_pos, drone_pos + desVel, lineColorRGB=[1, 1, 0])
             else:
-                p.addUserDebugPoints(V, colors, pointSize=2, replaceItemUniqueId=self.sampleID)
-        return
+                p.addUserDebugLine(drone_pos, drone_pos + desVel, lineColorRGB=[1, 0, 0],
+                                   replaceItemUniqueId=self.drawDroneGizmosIDs[0])
+
+            if self.drawDroneGizmosIDs[1] == 0:
+                self.drawDroneGizmosIDs[1] = p.addUserDebugLine(drone_pos, drone_pos + newVel, lineColorRGB=[1, 1, 0])
+            else:
+                p.addUserDebugLine(drone_pos, drone_pos + newVel, lineColorRGB=[1, 1, 0],
+                                   replaceItemUniqueId=self.drawDroneGizmosIDs[1])
+
+            extVal = 1
+            point1 = np.hstack((extVal * (point1 - velpos[1:2]), ob.p[2]))
+            point2 = np.hstack((extVal * (point2 - velpos[1:2]), ob.p[2]))
+
+            pC = [0, 0, 1]
+
+            if ob.pointID == 0:
+                ob.pointID = p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2)
+            else:
+                p.addUserDebugPoints([point1, point2, velpos], [pC, pC, pC], pointSize=2,
+                                     replaceItemUniqueId=ob.pointID)
+
+            if succes:
+                if ob.lineIDs[1] == 0:
+                    ob.lineIDs[1] = p.addUserDebugLine(point1, velpos, lineColorRGB=[1, 1, 0])
+                else:
+                    p.addUserDebugLine(point1, velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[1])
+
+                if ob.lineIDs[2] == 0:
+                    ob.lineIDs[2] = p.addUserDebugLine(point2, velpos, lineColorRGB=[1, 1, 0])
+                else:
+                    p.addUserDebugLine(point2, velpos, lineColorRGB=[1, 1, 0], replaceItemUniqueId=ob.lineIDs[2])
+
+
+            colors = np.tile(np.array([0, 1, 0]), (len(V), 1))
+            if len(V) > 0:
+                if self.sampleID == 0:
+                    self.sampleID = p.addUserDebugPoints(V, colors, pointSize=2)
+                else:
+                    p.addUserDebugPoints(V, colors, pointSize=2, replaceItemUniqueId=self.sampleID)
+        return newVel
 
     def detInputByMinimization2D(self, desVel, drone_pos, obstacles, plotConstraints=True):
         radius = 1.0
