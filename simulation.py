@@ -17,14 +17,14 @@ from Sampling.Sampler import Sampler
 
 #Setup pybullet simulation variables
 
-p.connect(p.GUI)
+physics_client = p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 p.setRealTimeSimulation(1)
 p.setGravity(0, 0, 0)
 p.resetDebugVisualizerCamera(cameraDistance=20,
                                      cameraYaw=90,
-                                     cameraPitch=-30,
+                                     cameraPitch=-89,
                                      cameraTargetPosition=[0, 0, 0])
 dt = 0.02
 pov = False
@@ -34,14 +34,14 @@ static_active = False
 env_bugtrap = True
 env_dynamic = True
 dynamic_active = False
-np.random.seed(10)
+np.random.seed(36)  #13 14 29
 
 # Define start and goal for the drone
 start = [0, -13, 5]
 goal = [0, 0, 5]
 # Load drone body and specify the dynamics of movement
 droneID = p.loadURDF("Environment/VisualSphere.urdf", start, p.getQuaternionFromEuler([0, 0, 0]))
-p.changeVisualShape(droneID, -1, rgbaColor=[0, 1, 0, 1])
+p.changeVisualShape(droneID, -1, rgbaColor=[0, 1, 0, 0.5])
 drone = Quadrotor()
 droneRadius = 1.0
 
@@ -66,11 +66,18 @@ if env_dynamic:
         p.setCollisionFilterPair(droneID, ob.ID, -1, -1, enableCollision)
 
 # Start of static simulation loop
+point_id = None
+line_id = None
+sfp_id = None
+goal_id = None
 if static_active:
     # Setup for RRT - Generate global path
     maxIter = 200
     rrt = RRT(bounds=staticEnv.Bounds, expandDis=1.0, goalSampleRate=10, maxIter=maxIter, droneID=droneID)
-    path, path_distance = rrt.rrt_planning(start, goal)
+    # path, path_distance = rrt.rrt_planning(start, goal)
+    # path, path_distance = rrt.rrt_star_planning(start, goal)
+    path, path_distance = rrt.informed_rrt_star_planning(start, goal)
+
 
     # Setup for drone dynamics
     N = 300
@@ -99,10 +106,21 @@ if static_active:
             A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True, proximity_radius=prox_radius)
             info_dict["A"] = A_ineq
             info_dict["b"] = b_ineq
+            if sfp_id != None:
+                p.removeBody(sfp_id)
             sfp_id = draw_polytope2(vertices)
 
         p.stepSimulation()
-        x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k], cont_type="MPC", info_dict=info_dict)
+
+        if point_id != None:
+            for i in point_id:
+                p.removeUserDebugItem(i)
+            for i in line_id:
+                p.removeUserDebugItem(i)
+        if goal_id != None:
+            p.removeUserDebugItem(goal_id)
+        goal_id = p.addUserDebugPoints([x_ref[0:3, k].tolist()], [[1, 0, 0]], 10)
+        x_bag[:, k+1],point_id, line_id = drone.step(x_bag[:, k], x_ref[:, k], cont_type="MPC", info_dict=info_dict)
         time.sleep(dt)
 
         if pov:
@@ -142,7 +160,7 @@ if dynamic_active:
     u_bag[:, 0] = u0
 
     info_dict = {}  # dictionary for further information required by MPC
-    sfp_id = None
+    # sfp_id = None
     for k in range(N - 1):
         drone_pos = x_bag[:3, k]
         drone_att = x_bag[3:6, k] * np.array([-1, 1, 1])
@@ -167,7 +185,12 @@ if dynamic_active:
 
         p.stepSimulation()
         #x_bag[:, k+1] = drone.step(x_bag[:, k], x_ref[:, k], cont_type="MPC", info_dict=info_dict)
-        x_bag[:, k + 1] = drone.step(x_bag[:, k], x_ref[:,-1], cont_type="MPC", info_dict=info_dict)
+        if point_id != None:
+            for i in point_id:
+                p.removeUserDebugItem(i)
+            for i in line_id:
+                p.removeUserDebugItem(i)
+        x_bag[:, k + 1], point_id, line_id= drone.step(x_bag[:, k], x_ref[:,-1], cont_type="MPC", info_dict=info_dict, dynamic=True)
         time.sleep(dt)
         for ob in dynamicEnv.obstacles:
             ob.update(dt)
