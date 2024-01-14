@@ -34,6 +34,10 @@ def test_traj_wps(N, wps):
     x_ref = np.hstack((x_ref, np.repeat(x_ref[:, -1].reshape((12,1)), N-x_ref.shape[1], axis=1)))
     return x_ref
 
+def linear_traj(N,wps):
+    x_ref = np.linspace(wps[0], wps[1], N)
+    x_ref = np.vstack((x_ref.T, np.zeros((9,N))))
+    return x_ref
 
 def min_snap(N, wps):
     ax, ay, az = wps[:,0], wps[:,1], wps[:,2]
@@ -52,3 +56,4 @@ def min_snap(N, wps):
     x_ref = np.vstack([xxs, yys, zzs, np.zeros((2, xxs.shape[0])), yaw, np.zeros((6, xxs.shape[0]))]) # zero ref velocities
     #x_ref = np.vstack([xxs, yys, zzs, np.zeros((2, xxs.shape[0])), yaw, vxx, vyy, vzz, np.zeros((3, xxs.shape[0]))])
     return x_ref
+

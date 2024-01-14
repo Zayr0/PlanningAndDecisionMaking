@@ -6,8 +6,9 @@ class MovingSpheres:
         self.ID = ID
         self.r = radius
         self.p = position
-        maxVel = 1.0
+        maxVel = np.random.uniform(low=1, high=2)
         self.v = np.random.uniform(low=[-maxVel, -maxVel, -maxVel], high=[maxVel, maxVel, maxVel], size=(3, ))
+        self.v = np.array([-1*np.sign(self.p[0])*maxVel, 0, 0]) #np.random.uniform(low=[maxVel, 0, 0], high=[maxVel, 0, 0], size=(3, )) # zero vertical veloctiy
 
     #Update and move the sphere.
     def update(self, dt):

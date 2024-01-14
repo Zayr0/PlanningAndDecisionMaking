@@ -90,4 +90,5 @@ def calculateDeltaB(A_ineq, obstacles, dt):
     for i, ob in enumerate(obstacles):
         deltaB.append(dt * np.dot(ob.v, A_ineq[i, :]))
 
+    deltaB = np.vstack([np.zeros((6, 1)), np.array(deltaB).reshape((-1,1))])
     return deltaB

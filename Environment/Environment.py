@@ -34,7 +34,8 @@ class Environment:
             position = np.asarray(self.Bounds.center) + np.random.uniform(
                 low=[self.Bounds.xMin, self.Bounds.yMin, self.Bounds.zMin],
                 high=[self.Bounds.xMax, self.Bounds.yMax, self.Bounds.zMax], size=(1, 3))
-
+            position[0, 0] = self.Bounds.center[0] + np.random.choice([self.Bounds.xMin, self.Bounds.xMax])
+            position[0,2] = self.Bounds.center[2] + (self.Bounds.zMin + self.Bounds.zMax)/2
 
             positionFree = True
 
