@@ -78,7 +78,7 @@ def recalculation_point2(drone_pos, drone_radius, A_ineq, B_ineq):
     constraints += [zj == drone_pos]
 
     problem = cp.Problem(cp.Minimize(cost), constraints)
-    result = problem.solve(solver=cp.OSQP, verbose=False)
+    result = problem.solve(solver=cp.OSQP, verbose=True)
 
     return zi.value
 

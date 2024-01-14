@@ -33,7 +33,6 @@ def remove_duplicate_inequalities(A, b):
 
 
 def draw_polytope(points):
-    print(points)
     hull = ConvexHull(points)
 
     # Vertices from the convex hull
