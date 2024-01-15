@@ -52,15 +52,17 @@ However, these functions where integrated into the other algorithm classes, so t
 ## Documentation/Report
 
 ## Gallery
+MPC through dynamic obstacles with a horizon N=20:
+https://github.com/Zayr0/PlanningAndDecisionMaking/assets/50660564/5f0d034c-4349-4536-945b-bd8f991bbbe6
 
+RRT* generating a graph. Minimum snap generates reference trajectory and MPC tracks reference trajectory.
+https://github.com/Zayr0/PlanningAndDecisionMaking/assets/50660564/01d4e956-7e1a-46d7-ad37-9507694b9816
 
+Informed RRT generating a graph. Minimum snap generates reference trajectory and MPC tracks reference trajectory.
 https://github.com/Zayr0/PlanningAndDecisionMaking/assets/50660564/3b1ae8b4-56e6-4bc6-ade9-77affd880ca0
 
 
-https://github.com/Zayr0/PlanningAndDecisionMaking/assets/50660564/01d4e956-7e1a-46d7-ad37-9507694b9816
 
-
-https://github.com/Zayr0/PlanningAndDecisionMaking/assets/50660564/5f0d034c-4349-4536-945b-bd8f991bbbe6
 
 
 ## References
