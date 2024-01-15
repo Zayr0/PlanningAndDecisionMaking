@@ -73,5 +73,5 @@ def draw_polytope2(points):
         basePosition=[0, 0, 0],
         baseOrientation=initial_orientation,
     )
-    p.changeVisualShape(obstacle_body_id, -1, rgbaColor=[1, 0, 1, 0.5])  # red color
+    p.changeVisualShape(obstacle_body_id, -1, rgbaColor=[1, 0, 1, 0.25])  # red color
     return obstacle_body_id

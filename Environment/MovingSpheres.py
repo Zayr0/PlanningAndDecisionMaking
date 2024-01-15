@@ -2,38 +2,17 @@ import numpy as np
 import pybullet as pb
 
 class MovingSpheres:
-    def __init__(self, ID, radius=1.0, position=np.array([0.0, 0.0, 0.0]), velocity=None):
+    def __init__(self, ID, radius=0.5, position=np.array([0.0, 0.0, 0.0]), velocity=np.array([None])):
         self.ID = ID
-        self.lineIDs = [0, 0, 0]
-
-        self.drawGizmos = False
-
-        self.pointID = 0
-        self.pointIDs = [0,0,0]
         self.r = radius
         self.p = position
-        maxVel = 1.5
-
-        if (velocity == None):
-            self.v = np.random.uniform(low=[-maxVel, -maxVel, -maxVel], high=[maxVel, maxVel, maxVel], size=(3, ))
-        elif (velocity == '2D'):
-            self.v = np.random.uniform(low=[-maxVel, -maxVel, 0], high=[maxVel, maxVel, 0], size=(3, ))
-        else:
-            self.v = velocity
-
-    def drawVel(self):
-        pb.addUserDebugLine(self.p, self.p + self.v, [1, 0, 0])
+        maxVel = np.random.uniform(low=1, high=2)
+        self.v = np.random.uniform(low=[-maxVel, -maxVel, -maxVel], high=[maxVel, maxVel, maxVel], size=(3, ))
+        self.v = np.array([-1*np.sign(self.p[0])*maxVel, 0, 0]) #np.random.uniform(low=[maxVel, 0, 0], high=[maxVel, 0, 0], size=(3, )) # zero vertical veloctiy
 
     #Update and move the sphere.
     def update(self, dt):
         self.p += self.v*dt
-        pb.resetBasePositionAndOrientation(self.ID, self.p, pb.getQuaternionFromEuler([0, 0, 0]))
-
-        if self.drawGizmos:
-            self.drawVel()
-
-    def update2D(self, dt):
-        self.p += np.array([self.v[0], self.v[1], 0]) * dt
         pb.resetBasePositionAndOrientation(self.ID, self.p, pb.getQuaternionFromEuler([0, 0, 0]))
 
     def center_dist(self, position):

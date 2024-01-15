@@ -110,25 +110,30 @@ class Quadrotor:
         u_bag = np.zeros((self.n_inputs, N))
         return x_bag, u_bag
 
-    def mpc(self, x0, x_goal, A_ineq, b_ineq, Q=np.eye(12), R=np.eye(4), N=10, render=True, deltaB=None):
+    def mpc(self, x0, x_goal, A_ineq, b_ineq, Q=np.eye(12), R=np.eye(4), N=10, render=True, deltaB=None, dynamic=False):
         x = cp.Variable((12, N))
         u = cp.Variable((4, N))
+        cost = sum(cp.quad_form(x[:, i] - x_goal.T, Q) + cp.quad_form(u[:, i], R) for i in range(N))
+        cost += cp.quad_form(x[:3,N-1] - x_goal[:3], np.eye(3))
+        obj = cp.Minimize(cost)
 
-        obj = cp.Minimize(sum(cp.quad_form(x[:, i] - x_goal.T, Q) + cp.quad_form(u[:, i], R) for i in range(N)))
-
-        cons = [x[:, 0] == self.dsys.A @ x0 + self.dsys.B @ u[:, 0]]
-        cons += [x[:3,N-1] == x_goal[:3]]
+        #cons = [x[:, 0] == self.dsys.A @ x0 + self.dsys.B @ u[:, 0]]
+        cons = [x[:, 0] == x0]
+        #cons += [x[:3,N-1] == x_goal[:3]]
         for i in range(1, N):
-            cons += [x[:, i] == self.dsys.A @ x[:, i - 1] + self.dsys.B @ u[:, i]]
+            cons += [x[:, i] == self.dsys.A @ x[:, i - 1] + self.dsys.B @ u[:, i-1]]
+            #cons += [x[2, i]==x0[2]]
 
-            if (deltaB != None):
-                cons += [A_ineq @ x[0:3, i] <= b_ineq + np.array(deltaB).T * i]
+            if deltaB is not None:
+                cons += [(A_ineq @ x[0:3, i])<= (b_ineq + np.array(deltaB) * i).flatten()]
 
         u_max = np.array([29.4, 1.4715, 1.4715, 0.0196])
         u_min = np.array([-9.8, -1.4715, -1.4715, -0.0196])
-        #cons += [u <= np.array([u_max]).T, u >= np.array([u_min]).T]
+        if dynamic==True:
+            cons += [u <= np.array([u_max]).T, u >= np.array([u_min]).T]
+            cons += [x[6:9,:] <= 2*np.ones((3,1)), x[6:9,:] >= -2*np.ones((3,1))]
 
-        if deltaB == None:
+        if deltaB is None:
             cons += [A_ineq @ x[0:3, :] <= b_ineq]
 
         prob = cp.Problem(obj, cons)
@@ -145,18 +150,16 @@ class Quadrotor:
             for i in range(N):
                 point_id.append(p.addUserDebugPoints([pred_x[:, i + 1].tolist()], [[0, 0, 1]], 5))
                 line_id.append(p.addUserDebugLine(pred_x[:, i].tolist(), pred_x[:, i + 1].tolist(), [0, 1, 0], 3))
-
+        #print(u.value[:,0])
         return u.value[:,0], x.value, point_id, line_id
 
-    def step(self, x, x_ref, cont_type="LQR", info_dict=None):
+    def step(self, x, x_ref, cont_type="LQR", info_dict=None, dynamic=False):
         # discrete step
         u = 0
         if cont_type == "LQR":
-            #print("u is: ")
             u = self.K @ (x_ref - x)
         elif cont_type == "MPC":
             A_ineq, b_ineq = info_dict["A"], info_dict["b"]
-            u, _, _, _ = self.mpc(x, x_ref, A_ineq, b_ineq, Q=np.diag([1,1,1,0,0,0,0,0,0,0,0,0]), R=np.eye(4)*0.0001, N=10, render=False, deltaB=None)
+            u, _, point_id, line_id = self.mpc(x, x_ref, A_ineq, b_ineq, Q=np.diag([1,1,1,0,0,0,0,0,0,0,0,0]), R=np.eye(4), N=10, render=True, deltaB=info_dict["deltaB"],dynamic=dynamic)
         x_next = self.dsys.A @ x + self.dsys.B @ u
-        #print(x_next)
-        return x_next
+        return x_next,point_id, line_id

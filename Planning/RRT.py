@@ -2,7 +2,6 @@ import pybullet as p
 from Environment.Environment import Environment
 from Modelling.drone_dynamics import Quadrotor
 from Modelling.trajectory_generation import *
-import time
 import numpy as np
 import copy
 import math
@@ -42,6 +41,7 @@ class RRT:
 
         while True:
             rnd = self.sample()
+            time.sleep(0.1)
             parent_id, nearest_node, new_node = self.get_nearestNode_newNode(rnd)
             no_collision = self.check_segment_collision(nearest_node, new_node)
 
