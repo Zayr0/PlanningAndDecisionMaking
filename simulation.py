@@ -22,16 +22,16 @@ p.setAdditionalSearchPath(pybullet_data.getDataPath())
 p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 p.setRealTimeSimulation(1)
 p.setGravity(0, 0, 0)
-p.resetDebugVisualizerCamera(cameraDistance=20,
+p.resetDebugVisualizerCamera(cameraDistance=15,
                                      cameraYaw=90,
-                                     cameraPitch=-89,
+                                     cameraPitch=-20,
                                      cameraTargetPosition=[0, 0, 0])
-dt = 0.1
+dt = 0.02
 sleeptime = 0.02
 pov = False
 sfp = True
 env_static = True
-static_active = False
+static_active = True
 env_bugtrap = True
 env_dynamic = True
 dynamic_active = False
@@ -102,7 +102,7 @@ if static_active:
 
         prox_radius = 10.0
 
-        if sfp and k%20==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
+        if sfp and k%5==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
             #A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True)
             A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True, proximity_radius=prox_radius)
             info_dict["A"] = A_ineq
@@ -192,7 +192,9 @@ if dynamic_active:
             for i in line_id:
                 p.removeUserDebugItem(i)
         x_bag[:, k + 1], point_id, line_id= drone.step(x_bag[:, k], x_ref[:,-1], cont_type="MPC", info_dict=info_dict, dynamic=True)
-        time.sleep(sleeptime)
+        time.sleep(dt)
+
+
         for ob in dynamicEnv.obstacles:
             ob.update(dt)
             contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)

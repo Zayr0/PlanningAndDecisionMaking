@@ -150,7 +150,7 @@ class Quadrotor:
             for i in range(N):
                 point_id.append(p.addUserDebugPoints([pred_x[:, i + 1].tolist()], [[0, 0, 1]], 5))
                 line_id.append(p.addUserDebugLine(pred_x[:, i].tolist(), pred_x[:, i + 1].tolist(), [0, 1, 0], 3))
-        print(u.value[:,0])
+        #print(u.value[:,0])
         return u.value[:,0], x.value, point_id, line_id
 
     def step(self, x, x_ref, cont_type="LQR", info_dict=None, dynamic=False):
