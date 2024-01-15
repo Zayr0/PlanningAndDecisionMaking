@@ -1,6 +1,5 @@
 import pybullet as p
 from Environment.Environment import Environment
-from Environment.Obstacle import Obstacle
 from Modelling.drone_dynamics import Quadrotor
 from Modelling.trajectory_generation import *
 import time
@@ -9,11 +8,9 @@ import numpy as np
 from GlobalPlanner.RRT import RRT
 from GlobalPlanner.SafeFlightPolytope import *
 from Helper.HullMaths import *
-import matplotlib.pyplot as plt
 import pybullet_data
 from Sampling.Sampler import Sampler
 
-#time.sleep(10)
 
 #Setup pybullet simulation variables
 
@@ -31,7 +28,7 @@ sleeptime = 0.02
 pov = False
 sfp = True
 env_static = True
-static_active = True
+static_active = False
 env_bugtrap = True
 env_dynamic = True
 dynamic_active = False
