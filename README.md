@@ -49,24 +49,8 @@ There also are some usefull distance calculation and minimum distance functions.
 However, these functions where integrated into the other algorithm classes, so this package became redundent.
 
 
+## Documentation/Report
 
-## Work division
-* finish drone dynamics python code - Leon
-* connect state space to .urdf file - Leon
-* sampled point in free space checking function - Jep
-* Map representation -> use voxels or somethign else? - Jep
-* graph generation e.g. RRT* - Long
-* steering function for quadrotor (paper about snap control https://ieeexplore.ieee.org/document/5980409) - Maria
-* dynamic obstacles representation - Maria
-* collision avoidance - Long
-* controller - Leon
+## Gallery
 
-* integrate min snap - Leon
-* calculate closest safe point within feasible set, from which recalculation can be done
-* octo tree/radius method - Jep
-* Velocity Obstacles - Jep
-* MPC - Long
-* Metrics and Experiment
-* Report
-* Presentation
-* Video!
+## References
