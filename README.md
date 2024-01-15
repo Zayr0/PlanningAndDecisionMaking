@@ -49,7 +49,8 @@ There also are some useful distance calculations and minimum distance functions.
 However, these functions were integrated into the other algorithm classes, so this package became redundant.
 
 ## Documentation/Report
-[Planning_and_Decision_Making_Project_Report.pdf](https://github.com/Zayr0/PlanningAndDecisionMaking/files/13941631/Planning_and_Decision_Making_Project_Report.pdf)
+[Planning_and_Decision_Making_Project_Report.pdf](https://github.com/Zayr0/PlanningAndDecisionMaking/files/13941779/Planning_and_Decision_Making_Project_Report.pdf)
+
 
 ## Gallery
 MPC through dynamic obstacles with a horizon N=20:
