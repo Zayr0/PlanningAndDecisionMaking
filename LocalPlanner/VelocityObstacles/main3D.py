@@ -2,10 +2,8 @@ import numpy as np
 import pybullet as p
 import time
 from Bot import Bot
-from VelocityObjects.VelocityObstacles import VelocityObstacles
+from LocalPlanner.VelocityObstacles.VelocityObstacles import VelocityObstacles
 from Helper.Bounds import Bounds
-import matplotlib.pyplot as plt
-from Environment.Environment import Environment
 import pybullet_data
 
 p.connect(p.GUI)

@@ -1,10 +1,9 @@
 import cvxpy as cp
 import numpy as np
 import pybullet as p
-from VelocityObjects.Sphere import Sphere
+from LocalPlanner.VelocityObstacles.Sphere import Sphere
 from math import sqrt
-import matplotlib.pyplot as plt
-from mip import Model, xsum, maximize, BINARY
+from mip import xsum, maximize, BINARY
 from gekko import GEKKO
 
 class VelocityObstacles:

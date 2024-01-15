@@ -1,18 +1,10 @@
-import pybullet as p
 from Environment.Environment import Environment
-from Environment.Obstacle import Obstacle
 from Modelling.drone_dynamics import Quadrotor
-from Modelling.trajectory_generation import *
-import time
-from Helper.Bounds import Bounds
-import numpy as np
-from Planning.RRT import RRT
 from Planning.SafeFlightPolytope import *
 from Helper.HullMaths import *
-import matplotlib.pyplot as plt
 import pybullet_data
 from Sampling.Sampler import Sampler
-from VelocityObjects.VelocityObstacles import VelocityObstacles
+from VelocityObstacles.VelocityObstacles import VelocityObstacles
 
 
 #Setup pybullet simulation variables
@@ -48,7 +40,7 @@ p.addUserDebugLine(start, goal, lineColorRGB=[1, 1, 0], lineWidth=2)
 
 # Load drone body and specify the dynamics of movement
 
-droneID = p.loadURDF("Environment/VisualSphere.urdf", start, p.getQuaternionFromEuler([0, 0, 0]))
+droneID = p.loadURDF("VelocityObstacles/VisualSphere.urdf", start, p.getQuaternionFromEuler([0, 0, 0]))
 p.changeVisualShape(droneID, -1, rgbaColor=[0, 1, 0, 1])
 drone = Quadrotor()
 droneRadius = 1.0
