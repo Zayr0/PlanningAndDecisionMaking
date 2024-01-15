@@ -30,11 +30,15 @@ The helper package contains helper functions and classes such as, bounding boxes
 The local planner package contains a function that can be called to implement an MPC controller.
 the `test_local_planner.py` file also contains an implementation of this function.
 
+The local planner package also contains a velocity obstacle package and class, that was never finished (95% done).
+It uses linear approximations of the VO exclusion area and sampling to generate a new velocity based on the desired velocity.
+There is an issue with the samples made not being rejected in the are of VO for each obstacle, depending on the position of the drone and the position of the obstacle.
+
 ### Modelling
 The modelling package contains the model of the quadrotor. The dynamics and linearization procces are described here.
 Also, the minimum snap generation functions are in this folder, as they are based on the drone dynamics.
 
-### Planning
+### GlobalPlanner
 The planning package contains the global planning algorithms.
 There is a class for calling RRT, RRT*, and informed RRT* all in one. 
 The package also contains the safe flight polytope functions.

@@ -1,6 +1,6 @@
 from Environment.Environment import Environment
 from Modelling.drone_dynamics import Quadrotor
-from Planning.SafeFlightPolytope import *
+from GlobalPlanner.SafeFlightPolytope import *
 from Helper.HullMaths import *
 import pybullet_data
 from Sampling.Sampler import Sampler

@@ -5,10 +5,10 @@ from Modelling.drone_dynamics import Quadrotor
 from Modelling.trajectory_generation import *
 import time
 import numpy as np
-from Planning.RRT import RRT
+from GlobalPlanner.RRT import RRT
 import matplotlib.pyplot as plt
 import cvxpy as cp
-from Planning.SafeFlightPolytope import *
+from GlobalPlanner.SafeFlightPolytope import *
 from Helper.HullMaths import *
 from MPC import mpc
 

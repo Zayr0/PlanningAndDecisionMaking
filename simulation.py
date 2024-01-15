@@ -6,8 +6,8 @@ from Modelling.trajectory_generation import *
 import time
 from Helper.Bounds import Bounds
 import numpy as np
-from Planning.RRT import RRT
-from Planning.SafeFlightPolytope import *
+from GlobalPlanner.RRT import RRT
+from GlobalPlanner.SafeFlightPolytope import *
 from Helper.HullMaths import *
 import matplotlib.pyplot as plt
 import pybullet_data
