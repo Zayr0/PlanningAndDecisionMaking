@@ -96,7 +96,7 @@ class Quadrotor:
         u_operating = np.array([10, 0, 0, 0]).reshape((-1, 1))
         A, B, C, D = self.linearize(x_operating, u_operating)
         Q = np.eye(12)
-        R = np.eye(4)
+        R = np.eye(4)*1000
         sys_continuous = ctrl.ss(A, B, C, D)
         self.csys = sys_continuous
         sys_discrete = ctrl.c2d(sys_continuous, self.dt, method='zoh')

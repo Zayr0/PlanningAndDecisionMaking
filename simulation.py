@@ -20,23 +20,24 @@ def run(auto_testing=False, settings=None):
     rslt_time_stamp_2 = None
     rslt_gp_path_length = None
     rslt_dynamic_success = None
-
+    rslt_static_success = None
+    results = {}
     pov = False
     sfp = True
     env_static = True
-    static_active = True
+    static_active = False
     env_bugtrap = True
     env_dynamic = True
-    dynamic_active = False
-    dynamic_controller = "MPC"
-    if settings:
-        env_static = settings["env_static"]
-        static_active = settings["env_static"]
-        env_dynamic = settings["env_dynamic"]
-        dynamic_active = settings["env_dynamic"]
-        dynamic_controller = settings["dynamic_controller"]
-
+    dynamic_active = True
+    planner = "rrt"
+    # env_static = settings["env_static"]
+    # static_active = settings["env_static"]
+    # env_dynamic = settings["env_dynamic"]
+    # dynamic_active = settings["env_dynamic"]
+    dynamic_controller = "LQR"
+    planner = "rrt"
     #Setup pybullet simulation variables
+
     if auto_testing:
         p.connect(p.DIRECT)
     else:
@@ -67,7 +68,7 @@ def run(auto_testing=False, settings=None):
 
     if env_dynamic:
         dynamicBounds = Bounds([[-5, 5], [-5, 5], [4, 6]], center=[0, 6, 0])
-        dynamicEnv = Environment(numObstacles=7, type="Dynamic", bounds=dynamicBounds)
+        dynamicEnv = Environment(numObstacles=3, type="Dynamic", bounds=dynamicBounds)
 
         # Setup collisions for moving obstacles
         collisionFilterGroup = 0
@@ -85,7 +86,12 @@ def run(auto_testing=False, settings=None):
         maxIter = 200
         rslt_time_stamp_1 = time.perf_counter()
         rrt = RRT(bounds=staticEnv.Bounds, expandDis=1.0, goalSampleRate=10, maxIter=maxIter, droneID=droneID)
-        path, path_distance = rrt.rrt_planning(start, goal)
+        if planner=="rrt":
+            path, path_distance = rrt.rrt_planning(start, goal)
+        elif planner == "rrt_star":
+            path, path_distance = rrt.rrt_star_planning(start, goal)
+        elif planner == "rrt_star_informed":
+            path, path_distance = rrt.informed_rrt_star_planning(start, goal)
         rslt_time_stamp_2 = time.perf_counter()
         rslt_gp_path_length = path_distance
         # Setup for drone dynamics
@@ -167,36 +173,30 @@ def run(auto_testing=False, settings=None):
 
             prox_radius = 100.0
 
-            if sfp and k%1==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
-                #A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True)
-                A_ineq, b_ineq, vertices = get_sfp(drone_pos, dynamicEnv, polytope_vertices=True, proximity_radius=prox_radius)
-                info_dict["A"] = A_ineq
-                info_dict["b"] = b_ineq
-                if sfp_id:
-                    p.removeBody(sfp_id)
-                sfp_id = draw_polytope2(vertices)
-
-                A_ineq, b_ineq = get_sfp(drone_pos, dynamicEnv, polytope_vertices=False, proximity_radius=prox_radius)
-                deltaB = calculateDeltaB(A_ineq, dynamicEnv.obstacles, dt)
-                info_dict["deltaB"] = deltaB
-
+            # if sfp and k%1==0:# and (np.linalg.norm(p_r - np.asarray(drone_pos)) <  droneRadius):
+            #     #A_ineq, b_ineq, vertices = get_sfp(drone_pos, staticEnv, polytope_vertices=True)
+            #     A_ineq, b_ineq, vertices = get_sfp(drone_pos, dynamicEnv, polytope_vertices=True, proximity_radius=prox_radius)
+            #     info_dict["A"] = A_ineq
+            #     info_dict["b"] = b_ineq
+            #     if sfp_id:
+            #         p.removeBody(sfp_id)
+            #     sfp_id = draw_polytope2(vertices)
+            #
+            #     A_ineq, b_ineq = get_sfp(drone_pos, dynamicEnv, polytope_vertices=False, proximity_radius=prox_radius)
+            #     deltaB = calculateDeltaB(A_ineq, dynamicEnv.obstacles, dt)
+            #     info_dict["deltaB"] = deltaB
 
             p.stepSimulation()
-            x_bag[:, k + 1] = drone.step(x_bag[:, k], x_ref[:,-1], cont_type=dynamic_controller, info_dict=info_dict)
-            time.sleep(dt)
-            time.sleep(0.1)
-            for ob in dynamicEnv.obstacles:
-                ob.update(dt)
-                contactPoints = p.getContactPoints(droneID, ob.ID, -1, -1)
-                if ob.min_dist(drone_pos, get_closest_point=False) <= 0.1:
-                    p.changeVisualShape(ob.ID, -1, rgbaColor=[1, 0, 0, 0.9])
-                    if auto_testing:
-                        p.disconnect()
-                        rslt_time_stamp_4 = time.perf_counter()
-                        results = {}
-                        results["rslt_dynamic_success"] = 0
-                        results["rslt_dynamic_time"] = 0
-                        return results
+            go_allowed = True
+            for obs in dynamicEnv.obstacles:
+                if obs.min_dist(drone_pos, get_closest_point=False) <= 1:
+                    go_allowed = False
+            if go_allowed:
+                x_bag[:, k + 1] = drone.step(x_bag[:, k], x_ref[:,-1], cont_type=dynamic_controller, info_dict=info_dict)
+            else:
+                dummy_ref = x_ref[:,-1].copy()
+                dummy_ref[:3] = drone_pos
+                x_bag[:, k + 1] = drone.step(x_bag[:, k], dummy_ref, cont_type=dynamic_controller, info_dict=info_dict)
 
             if np.linalg.norm(x_bag[:3, k + 1] - np.array(goal)) <= 1:
                 print("Goal was reached successfully")
@@ -221,12 +221,17 @@ def run(auto_testing=False, settings=None):
     # disconnect
     p.disconnect()
 
-    results = {}
     # result_gp_solver_time = rslt_time_stamp_2 - rslt_time_stamp_1
     # results["result_gp_solver_time"] = result_gp_solver_time
     # result_gp_path_length = rslt_gp_path_length
     # results["result_gp_path_length"] = result_gp_path_length
 
-    return results
 
-run()
+    return results
+#
+# settings = {}
+# settings["planner"] = "rrt"
+# settings["env_static"] = True
+# settings["env_dynamic"] = False
+# settings["dynamic_controller"] ="MPC"
+#run(auto_testing=False)
