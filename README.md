@@ -46,11 +46,21 @@ The package also contains the safe flight polytope functions.
 ### Sampling (Not used)
 The sampling package contains a sampling class that can sample a given space. 
 There also are some usefull distance calculation and minimum distance functions.
-However, these functions where integrated into the other algorithm classes, so this package became redundent.
+However, these functions where integrated into the other algorithm classes, so this package became redundant.
 
 
 ## Documentation/Report
 
 ## Gallery
+
+
+https://github.com/Zayr0/PlanningAndDecisionMaking/assets/50660564/3b1ae8b4-56e6-4bc6-ade9-77affd880ca0
+
+
+https://github.com/Zayr0/PlanningAndDecisionMaking/assets/50660564/01d4e956-7e1a-46d7-ad37-9507694b9816
+
+
+https://github.com/Zayr0/PlanningAndDecisionMaking/assets/50660564/5f0d034c-4349-4536-945b-bd8f991bbbe6
+
 
 ## References
